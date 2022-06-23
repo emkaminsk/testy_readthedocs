@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>immudb specs - My Docs</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href="../.." class="nav-link">Welcome to MkDocs</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../about/" class="nav-link">immudb explained</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../concepts/" class="nav-link">Concepts</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../releasenotes/" class="nav-link">Release Notes</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#immudb-specs" class="nav-link">immudb specs</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="immudb-specs">immudb specs</h1>
+<p><WrappedSection></p>
+<p>immudb is an append-only, tamperproof database with key/value and SQL (Structured Query Language) application programming interfaces.</p>
+<p>The immudb core persistence layer consists of a cryptographically-immutable log. Transactions are sequentially stored and uniquely identified by unsigned 64-bit integer values, thus setting a theoretical limit of 18446744073709551615 transactions (1^64 - 1).</p>
+<p>In order to provide manageable limits, immudb is designed to set an upper bound to the number of key-value pairs included in a single transaction. The default value being 1024, so using default settings, the theoretical number of key-value pairs that can be stored in immudb is: 1024 * (1^64 - 1).</p>
+<p>We designed immudb to require stable resources but not imposing strong limitations as most of the settings can be adjusted based on the use-case requirements.</p>
+<p>While key-value pairs consist of arbitrary byte arrays, a maximum length may be set at database creation time. Both parameters can be increased as needed, considering:</p>
+<ul>
+<li>long keys may degrade performance (when querying data through the index)</li>
+<li>longer values requires more memory at runtime</li>
+</ul>
+<p>Note: The cryptographic linking does not impose a practical restriction.</p>
+<p>immudb relies on a file abstraction layer and does not directly interact with the underlying file-system, if any. But default storage layer implementation writes data into fixed-size files, default size being 512MB. The current theoretical maximum number of files is 100 millions.</p>
+<h3 id="summary">Summary</h3>
+<p>Theoretical limits may be determined by a couple of elements:</p>
+<ul>
+<li>max number transactions: 2^64-1 (uint64)</li>
+<li>max number of files: 2^63-1 (max file size 2^56-1)</li>
+<li>max value length: 32 MB (max size: 2^56-1 bytes)</li>
+<li>max key length: 1024 Bytes (max length: 2^31-1 bytes)</li>
+</ul>
+<h3 id="running-platforms">Running platforms</h3>
+<p>immudb server runs in most operating systems: BSD, Linux, OS X, Solaris, Windows, IBM z/OS</p>
+<h3 id="keyvalue-api">Key/Value API</h3>
+<p>immudb includes a basic yet complete set of operations you would expect from a key-value store:</p>
+<pre><code class="language-java">Set (SetRequest) returns (TxMetadata)
+Get (KeyRequest) returns (Entry)
+SetReference (ReferenceRequest) returns (TxMetadata)
+
+Scan(ScanRequest) returns (Entries)
+History(HistoryRequest) returns (Entries)
+
+// grouping and sorting keys based on assgined scores
+ZAdd (ZAddRequest) returns (TxMetadata)
+ZScan (ZScanRequest) returns (ZEntries)
+</code></pre>
+<p>Additionally, immudb exposes direct access to transactions based on its unique identifier:</p>
+<pre><code class="language-java">TxById(TxRequest) returns (Tx)
+TxScan(TxScanRequest) returns (TxList)
+</code></pre>
+<p>But more importantly, immudb is able to generate cryptographic-proofs whenever is needed:</p>
+<pre><code class="language-java">VerifiableSet (VerifiableSetRequest) returns (VerifiableTx)
+VerifiableGet (VerifiableGetRequest) returns (VerifiableEntry)
+
+VerifiableTxById(VerifiableTxRequest) returns (VerifiableTx)
+
+VerifiableSetReference (VerifiableReferenceRequest) returns (VerifiableTx)
+
+VerifiableZAdd (VerifiableZAddRequest) returns (VerifiableTx)
+</code></pre>
+<p>Check official SDKs documentation at <a href="../../develop/connection/">develop with immudb</a>.</p>
+<h3 id="sql-api">SQL API</h3>
+<p>Based on the key-value storage layer, immudb includes a simplified SQL engine which is able to interprete most common features you
+would expect from a relational database but with the possibility to verify rows has not been tampered with.</p>
+<pre><code class="language-java">SQLExec(SQLExecRequest) returns (SQLExecResult)
+SQLQuery(SQLQueryRequest) returns (SQLQueryResult)
+​
+VerifiableSQLGet (VerifiableSQLGetRequest) returns (VerifiableSQLEntry)
+</code></pre>
+<p>Check <a href="../../develop/sql/transactions/">SQL reference</a> for a comprehensive description of SQL statements.</p>
+<h3 id="s3-storage-backend">S3 Storage Backend</h3>
+<p>immudb can store its data in the Amazon S3 service (or a compatible alternative). The following example shows how to run immudb with the S3 storage enabled:</p>
+<pre><code class="language-bash">export IMMUDB_S3_STORAGE=true
+export IMMUDB_S3_ACCESS_KEY_ID=&lt;S3 ACCESS KEY ID&gt;
+export IMMUDB_S3_SECRET_KEY=&lt;SECRET KEY&gt;
+export IMMUDB_S3_BUCKET_NAME=&lt;BUCKET NAME&gt;
+export IMMUDB_S3_LOCATION=&lt;AWS S3 REGION&gt;
+export IMMUDB_S3_PATH_PREFIX=testing-001
+export IMMUDB_S3_ENDPOINT=&quot;https://${IMMUDB_S3_BUCKET_NAME}.s3.amazonaws.com&quot;
+
+./immudb
+</code></pre>
+<p></WrappedSection></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

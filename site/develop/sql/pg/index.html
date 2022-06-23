@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../../img/favicon.ico">
+        <title>Pgsql protocol compatibility - My Docs</title>
+        <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
+
+        <script src="../../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../../..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href="../../.." class="nav-link">Welcome to MkDocs</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../../about/" class="nav-link">immudb explained</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../../concepts/" class="nav-link">Concepts</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../../releasenotes/" class="nav-link">Release Notes</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#pgsql-protocol-compatibility" class="nav-link">Pgsql protocol compatibility</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="pgsql-protocol-compatibility">Pgsql protocol compatibility</h1>
+<p>immudb can talk the <a href="https://www.postgresql.org/docs/9.3/protocol.html">pgsql wire protocol</a> which makes it compatible with a widely available set of clients and drivers.</p>
+<blockquote>
+<p>Note: immudb supports the pgsql wire protocol. It is <em>not</em> compatible with the SQL dialect. Check other topics in the <code>Develop with SQL</code> section to see what queries and operations are supported.</p>
+<p>Some pgsql clients and browser application execute incompatible statements in the background or directly query the pgsql catalog. Those may not work with immudb.</p>
+</blockquote>
+<p>immudb needs to be started with the <code>pgsql-server</code> option enabled (<code>IMMUDB_PGSQL_SERVER=true</code>).</p>
+<p>SSL is supported, if you configured immudb with a certificate.</p>
+<p>:::: tabs</p>
+<p>::: tab CLI
+Use the <a href="https://www.postgresql.org/docs/13/app-psql.html">psql client</a> included with PostgreSQL.
+:::</p>
+<p>::: tab C</p>
+<p>You can use a subset of the <a href="https://www.postgresql.org/docs/9.5/libpq.html">libpq</a> API. You will need to include:</p>
+<pre><code class="language-C"> #include &lt;libpq-fe.h&gt;
+</code></pre>
+<p>and compile with <code>gcc -o main $(pkg-config libpq --cflags --libs) main.c</code>.</p>
+<p>:::</p>
+<p>::: tab Ruby</p>
+<p>You can use the <a href="https://rubygems.org/gems/pg">pg</a> gem:</p>
+<pre><code class="language-ruby">require 'pg'
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<p>Download the official <a href="https://jdbc.postgresql.org/">JDBC driver</a> jar artifact for PostgreSQL.</p>
+<p>You can then compile your program:</p>
+<pre><code>$ javac -cp .:./postgresql-42.2.20.jar MyProgram.java
+</code></pre>
+<p>:::</p>
+<p>::: tab PHP</p>
+<p>Please refer to the <a href="https://www.php.net/manual/en/book.pgsql.php">PHP pgsql module</a> documentation for instructions on how to enable it in your server.</p>
+<p>:::</p>
+<p>::::</p>
+<p>To connect to the database:</p>
+<p>:::: tabs</p>
+<p>::: tab CLI</p>
+<pre><code>psql &quot;host=localhost dbname=defaultdb user=immudb password=immudb sslmode=disable&quot;
+psql (13.2, server 0.0.0)
+Type &quot;help&quot; for help.
+</code></pre>
+<p>:::</p>
+<p>::: tab C</p>
+<pre><code class="language-C">PGconn *conn = PQconnectdb(&quot;host=localhost user=immudb password=immudb dbname=defaultdb sslmode=disable&quot;);
+
+if (PQstatus(conn) == CONNECTION_BAD) {
+  fprintf(stderr, &quot;Connection to database failed: %s\n&quot;, PQerrorMessage(conn));
+  PQfinish(conn);
+  exit(1);
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Ruby</p>
+<pre><code class="language-ruby">conn = PG::Connection.open(&quot;sslmode=allow dbname=defaultdb user=immudb password=immudb host=127.0.0.1 port=5432&quot;)
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<p>It is important to pass the <code>preferQueryMode=simple</code> option, as immudb pgsql server only support simple query mode.</p>
+<pre><code class="language-java">Connection conn = 
+  DriverManager.getConnection(&quot;jdbc:postgresql://127.0.0.1:5432/defaultdb?sslmode=allow&amp;preferQueryMode=simple&quot;,
+    &quot;immudb&quot;, &quot;immudb&quot;);
+System.out.println(&quot;Opened database successfully&quot;);
+</code></pre>
+<p>:::</p>
+<p>::: tab PHP</p>
+<pre><code class="language-php">&lt;?php
+$dbconn = pg_connect(&quot;host=localhost port=5432 sslmode=require user=immudb dbname=defaultdb password=immudb&quot;);
+//...
+pg_close($dbconn);
+?&gt;
+</code></pre>
+<p>:::</p>
+<p>::::</p>
+<p>Execute statements:</p>
+<p>:::: tabs</p>
+<p>::: tab CLI</p>
+<pre><code>defaultdb=&gt; CREATE TABLE Orders(id INTEGER, amount INTEGER, title VARCHAR, PRIMARY KEY id);
+SELECT 1
+defaultdb=&gt; UPSERT INTO Orders (id, amount, title) VALUES (1, 200, 'title1');
+SELECT 1
+</code></pre>
+<p>:::</p>
+<p>::: tab C</p>
+<pre><code class="language-C">PGresult *res = PQexec(conn, &quot;CREATE TABLE Orders (id INTEGER, amount INTEGER, title VARCHAR, PRIMARY KEY id)&quot;);
+if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+  do_exit(conn, res);
+}
+PQclear(res);
+
+res = PQexec(conn, &quot;UPSERT INTO Orders (id, amount, title) VALUES (1, 200, 'title 1')&quot;);
+if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+  do_exit(conn, res);
+}
+PQclear(res);
+</code></pre>
+<p>:::</p>
+<p>::: tab Ruby</p>
+<pre><code class="language-ruby">conn.exec( &quot;CREATE TABLE Orders (id INTEGER, amount INTEGER, title VARCHAR, PRIMARY KEY id)&quot; )
+conn.exec( &quot;UPSERT INTO Orders (id, amount, title) VALUES (1, 200, 'title 1')&quot; )
+conn.exec( &quot;UPSERT INTO Orders (id, amount, title) VALUES (2, 400, 'title 2')&quot; )
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">Statement stmt = conn.createStatement();
+
+stmt.executeUpdate(&quot;CREATE TABLE people(id INTEGER, name VARCHAR, salary INTEGER, PRIMARY KEY id);&quot;);
+
+stmt.executeUpdate(&quot;INSERT INTO people(id, name, salary) VALUES (1, 'Joe', 20000);&quot;);
+stmt.executeUpdate(&quot;INSERT INTO people(id, name, salary) VALUES (2, 'Bob', 30000);&quot;);
+</code></pre>
+<p>:::</p>
+<p>::: tab PHP</p>
+<pre><code class="language-php">$stmt = 'CREATE TABLE people(id INTEGER, name VARCHAR, salary INTEGER, PRIMARY KEY id);';
+$result = pg_query($stmt) or die('Error message: ' . pg_last_error());
+$stmt = 'INSERT INTO people(id, name, salary) VALUES (1, 'Joe', 20000);';
+$result = pg_query($stmt) or die('Error message: ' . pg_last_error());
+$stmt = 'INSERT INTO people(id, name, salary) VALUES (2, 'Bob', 30000);';
+</code></pre>
+<p>:::</p>
+<p>::::</p>
+<p>Query and iterate over results:</p>
+<p>:::: tabs</p>
+<p>::: tab CLI</p>
+<pre><code>defaultdb=&gt; SELECT id, amount, title FROM Orders;
+ (defaultdb.Orders.id) | (defaultdb.Orders.amount) | (defaultdb.Orders.title)
+-----------------------+---------------------------+--------------------------
+                     1 |                       200 | &quot;title1&quot;
+(1 row)
+</code></pre>
+<p>:::</p>
+<p>::: tab C</p>
+<pre><code class="language-C">res = PQexec(conn, &quot;SELECT id, amount, title FROM Orders&quot;);
+if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+  printf(&quot;No data retrieved\n&quot;);
+  PQclear(res);
+  do_exit(conn, res);
+}
+
+int rows = PQntuples(res);
+for(int i=0; i&lt;rows; i++) {
+  printf(&quot;%s %s %s\n&quot;, PQgetvalue(res, i, 0),
+  PQgetvalue(res, i, 1), PQgetvalue(res, i, 2));
+}
+PQclear(res);
+PQfinish(conn);
+</code></pre>
+<p>:::</p>
+<p>::: tab Ruby</p>
+<pre><code class="language-ruby">conn.exec( &quot;SELECT id, amount, title FROM Orders&quot; ) do |result|
+  result.each do |row|
+    puts row.inspect
+  end
+end
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">ResultSet rs = stmt.executeQuery(&quot;SELECT * FROM people&quot;);
+
+while(rs.next()){
+    System.out.print(&quot;ID: &quot; + rs.getInt(&quot;(defaultdb.people.id)&quot;));
+    System.out.print(&quot;, Name: &quot; + rs.getString(&quot;(defaultdb.people.name)&quot;));
+    System.out.print(&quot;, Salary: &quot; + rs.getInt(&quot;(defaultdb.people.salary)&quot;));
+    System.out.println();
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab PHP</p>
+<pre><code class="language-php">$query = 'SELECT * FROM people';
+$result = pg_query($query) or die('Error message: ' . pg_last_error());
+while ($row = pg_fetch_row($result)) {
+  var_dump($row);  
+}
+</code></pre>
+<p>:::</p>
+<p>::::</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../../js/base.js" defer></script>
+        <script src="../../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

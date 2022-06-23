@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Reads And Writes - My Docs</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href="../.." class="nav-link">Welcome to MkDocs</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../about/" class="nav-link">immudb explained</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../concepts/" class="nav-link">Concepts</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../releasenotes/" class="nav-link">Release Notes</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#reads-and-writes" class="nav-link">Reads And Writes</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#get-and-set" class="nav-link">Get and Set</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#get-at-and-since-a-transaction" class="nav-link">Get at and since a transaction</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#get-at-revision" class="nav-link">Get at revision</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#get-at-txid" class="nav-link">Get at TXID</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#conditional-writes" class="nav-link">Conditional writes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="reads-and-writes">Reads And Writes</h1>
+<p>Most of the methods in SDKs have <code>Verified</code> equivalent, i.e. <code>Get</code> and <code>VerifiedGet</code>. The only difference is that with <code>Verified</code> methods proofs needed to mathematically verify that the data was not tampered are returned by the server and the verification is done automatically by SDKs. 
+Note that generating that proof has a slight performance impact, so primitives are allowed without the proof.
+It is still possible to get the proofs for a specific item at any time, so the decision about when or how frequently to do checks (with the Verify version of a method) is completely up to the user.
+It's possible also to use dedicated <a href="../../operations/auditor/">auditors</a> to ensure the database consistency, but the pattern in which every client is also an auditor is the more interesting one.</p>
+<h2 id="get-and-set">Get and Set</h2>
+<p><code>Get</code>/<code>VerifiedGet</code> and <code>Set</code>/<code>VerifiedSet</code> methods allow for basic operations on a Key Value level. In addition, <code>GetAll</code> and <code>SetAll</code> methods allow for adding and reading in a single transaction. See <a href="../transactions/">transactions chapter</a> for more details.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;context&quot;
+    &quot;log&quot;
+
+    &quot;github.com/codenotary/immudb/pkg/api/schema&quot;
+    immudb &quot;github.com/codenotary/immudb/pkg/client&quot;
+)
+
+func main() {
+    opts := immudb.DefaultOptions().WithAddress(&quot;localhost&quot;).WithPort(3322)
+    client := immudb.NewClient().WithOptions(opts)
+    err := client.OpenSession(context.TODO(), []byte(`immudb`), []byte(`immudb`), &quot;defaultdb&quot;)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    defer client.CloseSession(context.TODO())
+
+    // Without verification
+    tx, err := client.Set(context.TODO(), []byte(`x`), []byte(`y`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;Set: tx: %d&quot;, tx.Id)
+
+    entry, err := client.Get(context.TODO(), []byte(`x`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;Get: %v&quot;, entry)
+
+    tx, err = client.SetAll(context.TODO(), &amp;schema.SetRequest{
+        KVs: []*schema.KeyValue{
+            {Key: []byte(`1`), Value: []byte(`test1`)},
+            {Key: []byte(`2`), Value: []byte(`test2`)},
+            {Key: []byte(`3`), Value: []byte(`test3`)},
+        },
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;SetAll: tx: %d&quot;, tx.Id)
+
+    entries, err := client.GetAll(context.TODO(), [][]byte{[]byte(`1`), []byte(`2`), []byte(`3`)})
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;GetAll: %+v&quot;, entries)
+
+    // With verification
+    tx, err = client.VerifiedSet(context.TODO(), []byte(`xx`), []byte(`yy`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;VerifiedSet: tx: %d&quot;, tx.Id)
+
+    entry, err = client.Get(context.TODO(), []byte(`xx`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;VerifiedGet: %v&quot;, entry)
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+import json
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def encode(what: str):
+    return what.encode(&quot;utf-8&quot;)
+
+def decode(what: bytes):
+    return what.decode(&quot;utf-8&quot;)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+
+    # You have to operate on bytes
+    setResult = client.set(b'x', b'y')
+    print(setResult)            # immudb.datatypes.SetResponse
+    print(setResult.id)         # id of transaction
+    print(setResult.verified)   # in this case verified = False
+                                # see Tamperproof reading and writing
+
+    # Also you get response in bytes
+    retrieved = client.get(b'x')
+    print(retrieved)        # immudb.datatypes.GetResponse
+    print(retrieved.key)    # Value is b'x'
+    print(retrieved.value)  # Value is b'y'
+    print(retrieved.tx)     # Transaction number
+
+    print(type(retrieved.key))      # &lt;class 'bytes'&gt;
+    print(type(retrieved.value))    # &lt;class 'bytes'&gt;
+
+    # Operating with strings
+    encodedHello = encode(&quot;Hello&quot;)
+    encodedImmutable = encode(&quot;Immutable&quot;)
+    client.set(encodedHello, encodedImmutable)
+    retrieved = client.get(encodedHello)
+
+    print(decode(retrieved.value) == &quot;Immutable&quot;)   # Value is True
+
+    notExisting = client.get(b'asdasd')
+    print(notExisting)                              # Value is None
+
+
+    # JSON example
+    toSet = {&quot;hello&quot;: &quot;immutable&quot;}
+    encodedToSet = encode(json.dumps(toSet))
+    client.set(encodedHello, encodedToSet)
+
+    retrieved = json.loads(decode(client.get(encodedHello).value))
+    print(retrieved)    # Value is {&quot;hello&quot;: &quot;immutable&quot;}
+
+    # setAll example - sets all keys to value from dictionary
+    toSet = {
+        b'1': b'test1',
+        b'2': b'test2',
+        b'3': b'test3'
+    }
+
+    client.setAll(toSet)
+    retrieved = client.getAll(list(toSet.keys()))
+    print(retrieved) 
+    # Value is {b'1': b'test1', b'2': b'test2', b'3': b'test3'}
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">String key = &quot;key1&quot;;
+byte[] value = new byte[]{1, 2, 3};
+
+try {
+    immuClient.set(key, value);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+try {
+    value = immuClient.get(key);
+} catch (Exception e) {
+    // ...
+}
+</code></pre>
+<p>Note that <code>value</code> is a primitive byte array. You can set the value of a String using:<br/>
+<code>"some string".getBytes(StandardCharsets.UTF_8)</code></p>
+<p>Also, <code>set</code> method is overloaded to allow receiving the <code>key</code> parameter as a <code>byte[]</code> data type.</p>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    const setReq: Parameters.Set = { key: 'hello', value: 'world' }
+    const setRes = await cl.set(setReq)
+    console.log('success: set', setRes)
+
+    const getReq: Parameters.Get = { key: 'hello' }
+    const getRes = await cl.get(getReq)
+    console.log('success: get', getRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h2 id="get-at-and-since-a-transaction">Get at and since a transaction</h2>
+<p>You can retrieve a key on a specific transaction with <code>GetAt</code>/<code>VerifiedGetAt</code>. If you need to check the last value of a key after given transaction (which represent state of the indexer), you can use <code>GetSince</code>/<code>VerifiedGetSince</code>.
+:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;context&quot;
+    &quot;log&quot;
+
+    immudb &quot;github.com/codenotary/immudb/pkg/client&quot;
+)
+
+func main() {
+    opts := immudb.DefaultOptions().WithAddress(&quot;localhost&quot;).WithPort(3322)
+    client := immudb.NewClient().WithOptions(opts)
+    err := client.OpenSession(context.TODO(), []byte(`immudb`), []byte(`immudb`), &quot;defaultdb&quot;)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    defer client.CloseSession(context.TODO())
+
+    key := []byte(`123123`)
+    var txIDs []uint64
+    for _, v := range [][]byte{[]byte(`111`), []byte(`222`), []byte(`333`)} {
+        txID, err := client.Set(context.TODO(), key, v)
+        if err != nil {
+            log.Fatal(err)
+        }
+        txIDs = append(txIDs, txID.Id)
+    }
+
+    otherTxID, err := client.Set(context.TODO(), []byte(`other`), []byte(`other`))
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Without verification
+    entry, err := client.GetSince(context.TODO(), key, txIDs[0])
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;GetSince first: %+v&quot;, entry)
+
+    // With verification
+    entry, err = client.VerifiedGetSince(context.TODO(), key, txIDs[0]+1)
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;VerifiedGetSince second: %+v&quot;, entry)
+
+    // GetAt txID after inserting other data
+    _, err = client.GetAt(context.TODO(), key, otherTxID.Id)
+    if err == nil {
+        log.Fatalf(&quot;This should not happen, %+v&quot;, entry)
+    }
+
+    // Without verification
+    entry, err = client.GetAt(context.TODO(), key, txIDs[1])
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;GetAt second: %+v&quot;, entry)
+
+    // With verification
+    entry, err = client.VerifiedGetAt(context.TODO(), key, txIDs[2])
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;VerifiedGetAt third: %+v&quot;, entry)
+
+    // VerifiedGetAt txID after inserting other data
+    entry, err = client.VerifiedGetAt(context.TODO(), key, otherTxID.Id)
+    if err == nil {
+        log.Fatalf(&quot;This should not happen, %+v&quot;, entry)
+    }
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from grpc import RpcError
+from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+    first = client.set(b'justfirsttransaction', b'justfirsttransaction')
+
+    key = b'123123'
+
+    first = client.set(key, b'111')
+    firstTransaction = first.id
+
+    second = client.set(key, b'222')
+    secondTransaction = second.id
+
+    third = client.set(key, b'333')
+    thirdTransaction = third.id
+
+    print(client.verifiedGetSince(key, firstTransaction))   # b&quot;111&quot;
+    print(client.verifiedGetSince(key, firstTransaction + 1))   # b&quot;222&quot;
+
+    try:
+        # This key wasn't set on this transaction
+        print(client.verifiedGetAt(key, firstTransaction - 1))
+    except RpcError as exception:
+        print(exception.debug_error_string())
+        print(exception.details())
+
+    verifiedFirst = client.verifiedGetAt(key, firstTransaction) 
+                                    # immudb.datatypes.SafeGetResponse
+    print(verifiedFirst.id)         # id of transaction
+    print(verifiedFirst.key)        # Key that was modified
+    print(verifiedFirst.value)      # Value after this transaction
+    print(verifiedFirst.refkey)     # Reference key
+                                    # (Queries And History -&gt; setReference)
+    print(verifiedFirst.verified)   # Response is verified or not
+    print(verifiedFirst.timestamp)  # Time of this transaction
+
+    print(client.verifiedGetAt(key, secondTransaction))
+    print(client.verifiedGetAt(key, thirdTransaction))
+
+    try:
+        # Transaction doesn't exists yet
+        print(client.verifiedGetAt(key, thirdTransaction + 1))
+    except RpcError as exception:
+        print(exception.debug_error_string())
+        print(exception.details())
+
+if __name__ == &quot;__main__&quot;:
+    main()
+
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">byte[] key = &quot;key1&quot;.getBytes(StandardCharsets.UTF_8);
+byte[] val = new byte[]{1, 2, 3, 4, 5};
+TxMetadata txMd = null;
+
+try {
+    txMd = immuClient.set(key, val);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+// The standard (traditional) get options:
+
+KV kv = immuClient.getAt(key, txMd.id);
+
+kv = immuClient.getSince(key, txMd.id);
+
+// The verified get flavours:
+
+Entry vEntry = null;
+try {
+    vEntry = immuClient.verifiedGetAt(key, vEntry.txId);
+} catch (VerificationException e) {
+    // ...
+}
+
+try {
+    vEntry = immuClient.verifiedGetSince(key, vEntry.txId);
+} catch (VerificationException e) {
+    // ...
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+    const { id } = await cl.set({ key: 'key', value: 'value' })
+
+    const verifiedGetAtReq: Parameters.VerifiedGetAt = {
+        key: 'key',
+        attx: id
+    }
+    const verifiedGetAtRes = await cl.verifiedGetAt(verifiedGetAtReq)
+    console.log('success: verifiedGetAt', verifiedGetAtRes)
+
+    for (let i = 0; i &lt; 4; i++) {
+        await cl.set({ key: 'key', value: `value-${i}` })
+    }
+
+    const verifiedGetSinceReq: Parameters.VerifiedGetSince = {
+        key: 'key',
+        sincetx: 2
+    }
+    const verifiedGetSinceRes = await cl.verifiedGetSince(verifiedGetSinceReq)
+    console.log('success: verifiedGetSince', verifiedGetSinceRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h2 id="get-at-revision">Get at revision</h2>
+<p>Each historical value for a single key is attached a revision number.
+Revision numbers start with 1 and each overwrite of the same key results in
+a new sequential revision number assignment.</p>
+<p>A negative revision number can also be specified which means the nth historical value,
+e.g. -1 is the previous value, -2 is the one before and so on.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;context&quot;
+    &quot;log&quot;
+
+    immudb &quot;github.com/codenotary/immudb/pkg/client&quot;
+)
+
+func main() {
+    opts := immudb.DefaultOptions().WithAddress(&quot;localhost&quot;).WithPort(3322)
+    client := immudb.NewClient().WithOptions(opts)
+    err := client.OpenSession(context.TODO(), []byte(`immudb`), []byte(`immudb`), &quot;defaultdb&quot;)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    defer client.CloseSession(context.TODO())
+
+    // Use dedicated API call
+    entry, err := client.GetAtRevision(context.TODO(), []byte(&quot;key&quot;), -1)
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;Retrieved entry at revision %d: %s&quot;, entry.Revision, string(entry.Value))
+
+    // Use additional get option
+    entry, err = client.Get(context.TODO(), []byte(&quot;key&quot;), immudb.AtRevision(-2))
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;Retrieved entry at revision %d: %s&quot;, entry.Revision, string(entry.Value))
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Java
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4j/issues/new">Java sdk github project</a>
+:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h2 id="get-at-txid">Get at TXID</h2>
+<p>It's possible to retrieve all the keys inside a specific transaction.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;context&quot;
+    &quot;log&quot;
+
+    &quot;github.com/codenotary/immudb/pkg/api/schema&quot;
+    immudb &quot;github.com/codenotary/immudb/pkg/client&quot;
+)
+
+func main() {
+    opts := immudb.DefaultOptions().WithAddress(&quot;localhost&quot;).WithPort(3322)
+    client := immudb.NewClient().WithOptions(opts)
+    err := client.OpenSession(context.TODO(), []byte(`immudb`), []byte(`immudb`), &quot;defaultdb&quot;)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    defer client.CloseSession(context.TODO())
+
+    setTxFirst, err := client.SetAll(context.TODO(),
+        &amp;schema.SetRequest{KVs: []*schema.KeyValue{
+            {Key: []byte(&quot;key1&quot;), Value: []byte(&quot;val1&quot;)},
+            {Key: []byte(&quot;key2&quot;), Value: []byte(&quot;val2&quot;)},
+        }})
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;First txID: %d&quot;, setTxFirst.Id)
+
+    // Set keys in another transaction
+    setTxSecond, err := client.SetAll(context.TODO(),
+        &amp;schema.SetRequest{KVs: []*schema.KeyValue{
+            {Key: []byte(&quot;key1&quot;), Value: []byte(&quot;val11&quot;)},
+            {Key: []byte(&quot;key2&quot;), Value: []byte(&quot;val22&quot;)},
+        }})
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf(&quot;Second txID: %d&quot;, setTxSecond.Id)
+
+    // Without verification
+    tx, err := client.TxByID(context.TODO(), setTxFirst.Id)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, entry := range tx.Entries {
+        item, err := client.GetAt(context.TODO(), entry.Key, setTxFirst.Id)
+        if err != nil {
+            log.Fatal(err)
+        }
+        log.Printf(&quot;retrieved: %+v&quot;, item)
+    }
+
+    // With verification
+    tx, err = client.VerifiedTxByID(context.TODO(), setTxSecond.Id)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, entry := range tx.Entries {
+        item, err := client.VerifiedGetAt(context.TODO(), entry.Key, setTxSecond.Id)
+        if err != nil {
+            log.Fatal(err)
+        }
+        log.Printf(&quot;retrieved: %+v&quot;, item)
+    }
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+
+    keyFirst = b'333'
+    keySecond = b'555'
+
+    first = client.set(keyFirst, b'111')
+    firstTransaction = first.id
+
+    second = client.set(keySecond, b'222')
+    secondTransaction = second.id
+
+    toSet = {
+        b'1': b'test1',
+        b'2': b'test2',
+        b'3': b'test3'
+    }
+
+    third = client.setAll(toSet)
+    thirdTransaction = third.id
+
+    keysAtFirst = client.txById(firstTransaction)
+    keysAtSecond = client.txById(secondTransaction)
+    keysAtThird = client.txById(thirdTransaction)
+
+    print(keysAtFirst)  # [b'333']
+    print(keysAtSecond) # [b'555']
+    print(keysAtThird)  # [b'1', b'2', b'3']
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">TxMetadata txMd = null;
+try {
+    txMd = immuClient.verifiedSet(key, val);
+} catch (VerificationException e) {
+    // ...
+}
+try {
+    Tx tx = immuClient.txById(txMd.id);
+} catch (MaxWidthExceededException | NoSuchAlgorithmException e) {
+    // ...
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+    const { id } = await cl.set({ key: 'key', value: 'value' })
+
+    const txByIdReq: Parameters.TxById = { tx: id }
+    const txByIdRes = await cl.txById(txByIdReq)
+    console.log('success: txById', txByIdRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h2 id="conditional-writes">Conditional writes</h2>
+<p>immudb can check additional preconditions before the write operation is made.
+Precondition is checked atomically with the write operation.
+It can be then used to ensure consistent state of data inside the database.</p>
+<p>Following preconditions are supported:</p>
+<ul>
+<li>MustExist - precondition checks if given key exists in the database,
+  this precondition takes into consideration logical deletion and data expiration,
+  if the entry was logically deleted or has expired, MustExist precondition for
+  such entry will fail</li>
+<li>MustNotExist - precondition checks if given key does not exist in the database,
+  this precondition also takes into consideration logical deletion and data expiration,
+  if the entry was logically deleted or has expired, MustNotExist precondition for
+  such entry will succeed</li>
+<li>NotModifiedAfterTX - precondition checks if given key was not modified after given transaction id,
+  local deletion and setting entry with expiration data is also considered modification of the
+  entry</li>
+</ul>
+<p>In many cases, keys used for constraints will be the same as keys for written entries.
+A good example here is a situation when a value is set only if that key does not exist.
+This is not strictly required - keys used in constraints do not have to be the same
+or even overlap with keys for modified entries. An example would be if only one of
+two keys should exist in the database. In such case, the first key will be modified
+and the second key will be used for MustNotExist constraint.</p>
+<p>A write operation using precondition can not be done in an asynchronous way.
+Preconditions are checked twice when processing such requests - first check is done
+against the current state of internal index, the second check is done just before
+persisting the write and requires up-to-date index.</p>
+<p>Preconditions are available on <code>SetAll</code>, <code>Reference</code> and <code>ExecAll</code> operations.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<p>In go sdk, the <code>schema</code> package contains convenient wrappers for creating constraint objects,
+such as <code>schema.PreconditionKeyMustNotExist</code>.</p>
+<h4 id="example-ensure-modification-is-done-atomically-when-there-are-concurrent-writers">Example - ensure modification is done atomically when there are concurrent writers</h4>
+<pre><code class="language-go">entry, err := c.Get(ctx, []byte(&quot;key&quot;))
+if err != nil {
+    log.Fatal(err)
+}
+
+newValue := modifyValue(entry.Value)
+
+_, err = c.SetAll(ctx, &amp;schema.SetRequest{
+    KVs: []*schema.KeyValue{{
+        Key:   []byte(&quot;key&quot;),
+        Value: newValue,
+    }},
+    Preconditions: []*schema.Precondition{
+        schema.PreconditionKeyNotModifiedAfterTX(
+            []byte(&quot;key&quot;),
+            entry.Tx,
+        ),
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+</code></pre>
+<h4 id="example-allow-setting-the-key-only-once">Example - allow setting the key only once</h4>
+<pre><code class="language-go">tx, err := client.SetAll(ctx, &amp;schema.SetRequest{
+    KVs: []*schema.KeyValue{
+        {Key: []byte(&quot;key&quot;), Value: []byte(&quot;val&quot;)},
+    },
+    Preconditions: []*schema.Precondition{
+        schema.PreconditionKeyMustNotExist([]byte(&quot;key&quot;)),
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+</code></pre>
+<h4 id="example-set-only-one-key-in-a-group-of-keys">Example - set only one key in a group of keys</h4>
+<pre><code class="language-go">tx, err := client.SetAll(ctx, &amp;schema.SetRequest{
+    KVs: []*schema.KeyValue{
+        {Key: []byte(&quot;key1&quot;), Value: []byte(&quot;val1&quot;)},
+    },
+    Preconditions: []*schema.Precondition{
+        schema.PreconditionKeyMustNotExist([]byte(&quot;key2&quot;)),
+        schema.PreconditionKeyMustNotExist([]byte(&quot;key3&quot;)),
+        schema.PreconditionKeyMustNotExist([]byte(&quot;key4&quot;)),
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+</code></pre>
+<h4 id="example-check-if-returned-error-indicates-precondition-failure">Example - check if returned error indicates precondition failure</h4>
+<pre><code class="language-go">import (
+    immuerrors &quot;github.com/codenotary/immudb/pkg/client/errors&quot;
+)
+
+...
+
+tx, err := client.SetAll(ctx, &amp;schema.SetRequest{
+    KVs: []*schema.KeyValue{
+        {Key: []byte(&quot;key&quot;), Value: []byte(&quot;val&quot;)},
+    },
+    Preconditions: []*schema.Precondition{
+        schema.PreconditionKeyMustExist([]byte(&quot;key&quot;)),
+    },
+})
+immuErr := immuerrors.FromError(err)
+if immuErr != nil &amp;&amp; immuErr.Code() == immuerrors.CodIntegrityConstraintViolation {
+    log.Println(&quot;Constraint validation failed&quot;)
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Java
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4j">Java sdk github project</a>
+:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

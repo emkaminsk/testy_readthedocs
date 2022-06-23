@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../../img/favicon.ico">
+        <title>Querying - My Docs</title>
+        <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
+
+        <script src="../../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../../..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href="../../.." class="nav-link">Welcome to MkDocs</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../../about/" class="nav-link">immudb explained</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../../concepts/" class="nav-link">Concepts</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../../releasenotes/" class="nav-link">Release Notes</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#querying" class="nav-link">Querying</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="querying">Querying</h1>
+<p><WrappedSection></p>
+<h3 id="selecting-all-columns">Selecting all columns</h3>
+<p>All columns from all joined tables can be queried with <code>SELECT *</code> statement.</p>
+<pre><code class="language-sql">SELECT *
+FROM products;
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="selecting-specific-columns">Selecting specific columns</h3>
+<pre><code class="language-sql">SELECT id, customer_name, ip
+FROM customers;
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="filtering-entries">Filtering entries</h3>
+<pre><code class="language-sql">SELECT id, customer_name, email
+FROM customers
+WHERE country = 'SE' AND city = 'Arvika';
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="ordering-by-column-value">Ordering by column value</h3>
+<pre><code class="language-sql">SELECT id, customer_name
+FROM customers
+ORDER BY customer_name ASC;
+</code></pre>
+<p>Currently only one column can be used in the <code>ORDER BY</code> clause.</p>
+<p>The order may be either ascending (<code>ASC</code> suffix, default) or descending (<code>DESC</code> suffix).</p>
+<p>Ordering rows by a value of a column requires a matching index on that column.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="inner-join">INNER JOIN</h3>
+<p>immudb supports standard SQL <code>INNER JOIN</code> syntax.
+The <code>INNER</code> join type is optional.</p>
+<pre><code class="language-sql">SELECT *
+FROM orders
+INNER JOIN customers ON orders.customerid = customers.id;
+
+SELECT *
+FROM orders
+JOIN customers ON orders.customerid = customers.id
+WHERE orders.productid = 2;
+
+SELECT * FROM orders
+JOIN customers ON customers.id = orders.customerid
+JOIN products ON products.id = orders.productid;
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="like-operator">LIKE operator</h3>
+<p>immudb supports the <code>LIKE</code> operator.
+Unlike in other SQL engines though, the pattern use a regexp syntax
+supported by the <a href="https://pkg.go.dev/regexp">regexp library in the go language</a>.</p>
+<p>A <code>NOT</code> prefix negates the value of the <code>LIKE</code> operator.</p>
+<pre><code class="language-sql">SELECT product
+FROM products
+WHERE product LIKE '(J.*ce|Red)';
+
+SELECT product
+FROM products
+WHERE product NOT LIKE '(J.*ce|Red)';
+
+SELECT id, product
+FROM products
+WHERE (id &gt; 0 AND NOT products.id &gt;= 10)
+  AND (products.product LIKE 'J');
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="in-operator">IN operator</h3>
+<p>immudb has a basic supports for the <code>IN</code> operator.</p>
+<p>A <code>NOT</code> prefix negates the value of the <code>IN</code> operator.</p>
+<p>Note: Currently the list for the <code>IN</code> operator can not be
+      calculated using a sub-query.</p>
+<pre><code class="language-sql">SELECT product
+FROM products
+WHERE product IN ('Milk', 'Grapes - Red');
+
+SELECT product
+FROM products
+WHERE product NOT IN ('Milk', 'Grapes - Red');
+
+SELECT id, product
+FROM products
+WHERE (id &gt; 0 AND NOT products.id &gt;= 10)
+  AND (product IN ('Milk', 'Grapes - Red'));
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="column-and-table-aliasing">Column and table aliasing</h3>
+<pre><code class="language-sql">SELECT c.id, c.customer_name AS name, active
+FROM customers AS c
+WHERE c.id &lt;= 3 AND c.active = true;
+
+SELECT c.id, c.customer_name AS name, active
+FROM customers c
+WHERE c.id &lt;= 3 AND c.active = true;
+</code></pre>
+<p>Table name aliasing is necessary when using more than one join with the same table.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="aggregations">Aggregations</h3>
+<p>Available aggregation functions:</p>
+<p><CustomList class="no-horizontal-padding" inverse size="small"></p>
+<ul>
+<li>COUNT</li>
+<li>SUM</li>
+<li>MAX</li>
+<li>MIN</li>
+<li>AVG</li>
+</ul>
+<p></CustomList></p>
+<pre><code class="language-sql">SELECT
+    COUNT(*) AS c,
+    SUM(age),
+    MIN(age),
+    MAX(age),
+    AVG(age)
+FROM customers;
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="grouping-results-with-group-by">Grouping results with GROUP BY</h3>
+<p>Results can be grouped by a value of a single column.
+That column must also be used in a matching <code>ORDER BY</code> clause.</p>
+<pre><code class="language-sql">SELECT COUNT(*) as customer_count, country
+FROM customers
+GROUP BY country
+ORDER BY country;
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="filtering-grouped-results-with-having">Filtering grouped results with HAVING</h3>
+<pre><code class="language-sql">SELECT
+    active,
+    COUNT(*) as c,
+    MIN(age),
+    MAX(age)
+FROM customers
+GROUP BY active
+HAVING COUNT(*) &gt; 0
+ORDER BY active DESC;
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="sub-queries">Sub-queries</h3>
+<p>The table in the <code>SELECT</code> or <code>JOIN</code> clauses can be replaced with a sub-query.</p>
+<pre><code class="language-sql">SELECT * FROM (
+    SELECT id, customer_name
+    FROM customers
+    WHERE age &lt; 30
+)
+INNER JOIN customer_review
+    ON customer_review.customerid = customers.id;
+
+SELECT * FROM (
+    SELECT id, customer_name
+    FROM customers
+    WHERE age &lt; 30
+) AS c
+INNER JOIN (
+    SELECT * FROM customer_review
+) AS r
+    ON r.customerid = c.id;
+</code></pre>
+<p>Note: the context of a sub-query does not propagate outside,
+      e.g. it is not possible to reference a table from a sub-query
+      in the <code>WHERE</code> clause outside of the sub-query.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="combining-query-results-with-union">Combining query results with UNION</h3>
+<p>It is possible to combine multiple query results with the <code>UNION</code> operator.</p>
+<p>Subqueries must select the same number and type of columns.
+The final return will assign the same naming as in the first subquery, even if names differ.</p>
+<pre><code class="language-sql">SELECT customer_name as name
+FROM customers
+WHERE age &lt; 30
+UNION
+SELECT seller_name
+FROM sellers
+WHERE age &lt; 30
+</code></pre>
+<p>Subqueries are not constrained in any way, they can contain aggregations or joins.</p>
+<p>Duplicate rows are excluded by default. Using <code>UNION ALL</code> will leave duplicate rows in place.</p>
+<pre><code class="language-sql">SELECT AVG(age) FROM customers
+UNION ALL 
+SELECT AVG(age) FROM sellers
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="transactions">Transactions</h3>
+<p>The ACID (Atomicity, Consistency, Isolation, and Durability) compliance is complete.</p>
+<p>Handling read-write conflicts may be necessary when dealing with concurrent transactions. Getting the error <code>ErrTxReadConflict</code> ("tx read conflict") means there was another transaction committed before the current one, and the data it read may have been invalidated.
+<a href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> validations have not yet been implemented, therefore there may be false positives generated. In case of conflict, a new attempt may be required.</p>
+<pre><code class="language-sql">BEGIN TRANSACTION;
+    UPSERT INTO products (id, price, product)
+    VALUES (4, '$5.76', 'Bread');
+
+    INSERT INTO orders(productid, customerid)
+    VALUES(4, 1);
+COMMIT;
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="time-travel">Time travel</h3>
+<p>Time travel allows you to read data from SQL as if it were in a previous state or from a specific time range.
+Initial and final points are optional and can be specified using either a transaction ID or a timestamp.</p>
+<p>The temporal range can be used to filter out rows from the specified (physical) table, but it is not supported in subqueries.</p>
+<p>The initial point can be inclusive (<code>SINCE</code>) or exclusive (<code>AFTER</code>).
+The final point can be inclusive (<code>UNTIL</code>) or exclusive (<code>BEFORE</code>).</p>
+<pre><code class="language-sql">SELECT id, product, price
+FROM products BEFORE TX 13
+WHERE id = 2;
+</code></pre>
+<pre><code class="language-sql">SELECT * FROM sales SINCE '2022-01-06 11:38' UNTIL '2022-01-06 12:00'
+</code></pre>
+<p>Temporal ranges can be specified using functions and parameters</p>
+<pre><code class="language-sql">SELECT * FROM mytable SINCE TX @initialTx BEFORE now()
+</code></pre>
+<p></WrappedSection></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../../js/base.js" defer></script>
+        <script src="../../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

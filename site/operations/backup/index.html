@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Hot backup and restore - My Docs</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href="../.." class="nav-link">Welcome to MkDocs</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../about/" class="nav-link">immudb explained</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../concepts/" class="nav-link">Concepts</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../releasenotes/" class="nav-link">Release Notes</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#hot-backup-and-restore" class="nav-link">Hot backup and restore</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#backup" class="nav-link">Backup</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#restore" class="nav-link">Restore</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#examples" class="nav-link">Examples</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="hot-backup-and-restore">Hot backup and restore</h1>
+<p><WrappedSection></p>
+<p>Hot backup/restore feature allows to backup and restore immudb database without stopping immudb engine. Database remains accessible during backup process. It is possibly to perform full or incremental/differential backup and restore.</p>
+<p>Both backup and restore functions can use streams or files as a source/destination.</p>
+<p>Backup file is not compressed, assuming user may use any suitable method (see examples for bzip2 compression).</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h2 id="backup">Backup</h2>
+<pre><code>immuadmin hot-backup &lt;database&gt; [-o &lt;file&gt; [--append]] [--start-tx]
+</code></pre>
+<h3 id="full-backup">Full backup</h3>
+<p>To run full database backup, execute <code>immuadmin hot-backup &lt;database&gt;</code> command, specifying the optional backup file name with <code>-o</code> options. If <code>-o</code> option is not specified, output is sent to <code>stdout</code>.</p>
+<p>If backup file is specified with <code>-o</code> option, the file is created. If file already exists, backup process fails.</p>
+<h3 id="incremental-backup">Incremental backup</h3>
+<p>When backup database up to the existing file, <code>immuadmin</code> tools finds the last backed up database transaction in file, verifies its checksum and appends only database changes, made after this transaction. <code>immuadmin</code> requires user to specify <code>--append</code> command line option to append to existing file.</p>
+<p>When backup up to the stream, <code>immuadmin</code> doesn't have information about last backup up transaction, however user can specify the ID of the transaction to start from with <code>--start-tx</code> command line option. It allows user to implement incremental/differential backup strategy, using streams.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h2 id="restore">Restore</h2>
+<pre><code>immuadmin hot-restore &lt;database&gt; [-i &lt;file&gt;] [--append] [--force] [--force-replica]
+</code></pre>
+<h3 id="full-restore">Full restore</h3>
+<p>To run full restore, execute <code>immuadmin hot-restore &lt;database&gt;</code> command, specifying the optional backup file name with <code>-o</code> options. If <code>-o</code> option is not specified, input data is read from <code>stdin</code>.</p>
+<p>If database already exists, restore process fails.</p>
+<h3 id="incremental-restore">Incremental restore</h3>
+<p>If database already exists, it is possible to append new data from backup file to the database. In this case user has to specify <code>--append</code> flag.</p>
+<h4 id="transaction-overlapgap-handling">Transaction overlap/gap handling</h4>
+<p><code>immuadmin</code> tries to verify that backup file and database where data are being restored to have the same origin. To do this <code>immuadmin</code> finds the last transaction in source database and the same transaction in the backup file, and check transaction signatures. If transactions don't match, restore isn't possible.</p>
+<p>When there is no overlap between transactions in database and file, transaction verification is not possible. However, if there is no gap between transactions, <code>immuadmin</code> allows to bypass verification with <code>--force</code> command line option. If there is a gap between last transaction in database and first transaction in file, restore isn't possible.</p>
+<h3 id="transaction-verification">Transaction verification</h3>
+<p>During restore process <code>immuadmin</code> checks if checksum, reported by database after restoration of the transaction, matches the one stored in the file during backup process. It allows to detect backup file accidental or malicious corruption.</p>
+<h3 id="replica-flag-handling">Replica flag handling</h3>
+<p>It is possible to restore data only to the replica database. During full restore database automatically created as replica (replica flag is switched off after restore), but for incremental restore <code>immuadmin</code> assumes database is already in replica mode (user can use <code>immuadmin database update &lt;database&gt; --replication-enabled</code> command to switch on replica mode).</p>
+<p>However, it is possible to automatically switch on and off replica mode for incremental backup using <code>--force-replica</code> command line option.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="verifying-backup-file">Verifying backup file</h3>
+<pre><code>immuadmin hot-restore --verify [-i &lt;file&gt;]
+</code></pre>
+<p>It is possible to verify backup file/stream using <code>immuadmin hot-restore --verify</code> command. It only checks the correctness of database file, e.g. file format and correct sequence of transactions in file. The only way to detect data corruption is to restore data.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h2 id="examples">Examples</h2>
+<p>Full backup to file:</p>
+<pre><code>immuadmin hot-backup foo -o foo.backup
+immuadmin hot-backup foo &gt; foo.backup
+</code></pre>
+<p>Incremental backup to file:</p>
+<pre><code>immuadmin hot-backup foo -o foo.backup --append
+</code></pre>
+<p>Incremental backup with <code>bzip2</code> compression:</p>
+<pre><code>immuadmin hot-backup foo --start-tx 123 | bzip2 &gt; foo.bz2
+</code></pre>
+<p>Full restore</p>
+<pre><code>immuadmin hot-restore bar -i foo.backup
+immuadmin hot-restore bar &lt; foo.backup
+</code></pre>
+<p>Full restore from <code>bzip2</code>-compressed file</p>
+<pre><code>bunzip2 foo.bz2 -c | immuadmin hot-restore bar
+</code></pre>
+<p>Incremental restore with automatic switching of replica mode</p>
+<pre><code>immuadmin hot-restore bar -i foo.backup --append --force-replica
+</code></pre>
+<p>Copy database:</p>
+<pre><code>immuadmin hot-backup foo | immuadmin hot-restore bar
+</code></pre>
+<p></WrappedSection></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

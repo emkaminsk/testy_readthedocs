@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Running an Auditor with immuclient - My Docs</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href="../.." class="nav-link">Welcome to MkDocs</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../about/" class="nav-link">immudb explained</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../concepts/" class="nav-link">Concepts</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../releasenotes/" class="nav-link">Release Notes</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#use-immuclient-as-auditor" class="nav-link">Use immuclient as Auditor</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#running-immuclient-auditor-as-a-service" class="nav-link">Running immuclient Auditor as a service</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#running-immuclient-auditor-with-docker" class="nav-link">Running immuclient Auditor with docker</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#auditor-best-practices" class="nav-link">Auditor best practices</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="use-immuclient-as-auditor">Use immuclient as Auditor</h1>
+<p><WrappedSection></p>
+<p>The Auditor is a component for checking if immudb was tampered, it's a good practice to run the auditor as a separate and independent component. immuclient can act as Auditor by running the following command:</p>
+<p>Start interactive:</p>
+<pre><code class="language-bash">$ ./immuclient audit-mode
+1m0s
+immuclientd 2022/05/22 12:34:11 INFO: starting auditor with a 1m0s interval ...
+immuclientd 2022/05/22 12:34:11 INFO: auditor monitoring HTTP server starting on 0.0.0.0:9477 ...
+immuclientd 2022/05/22 12:34:11 INFO: audit #1 started @ 2022-05-22 12:34:11.543823286 +0200 CEST m=+0.153679785
+immuclientd 2022/05/22 12:34:11 INFO: audit #1 - list of databases to audit has been (re)loaded - 2 database(s) found: [defaultdb mydatabase]
+immuclientd 2022/05/22 12:34:11 INFO: audit #1 - auditing database defaultdb
+immuclientd 2022/05/22 12:34:11 INFO: audit #1 finished in 55.295777ms @ 2022-05-22T12:34:11.599119184+02:00
+</code></pre>
+<p>immuclient is now running on the following address: 0.0.0.0:9477/metrics</p>
+<p>example output:</p>
+<pre><code class="language-bash"># HELP immuclient_audit_curr_root_per_server Current root index used for the latest audit.
+# TYPE immuclient_audit_curr_root_per_server gauge
+immuclient_audit_curr_root_per_server{server_address=&quot;127.0.0.1:3322&quot;,server_id=&quot;br8eugq036tfln0ct6o0&quot;} 2
+# HELP immuclient_audit_prev_root_per_server Previous root index used for the latest audit.
+# TYPE immuclient_audit_prev_root_per_server gauge
+immuclient_audit_prev_root_per_server{server_address=&quot;127.0.0.1:3322&quot;,server_id=&quot;br8eugq036tfln0ct6o0&quot;} -1
+# HELP immuclient_audit_result_per_server Latest audit result (1 = ok, 0 = tampered).
+# TYPE immuclient_audit_result_per_server gauge
+immuclient_audit_result_per_server{server_address=&quot;127.0.0.1:3322&quot;,server_id=&quot;br8eugq036tfln0ct6o0&quot;} -1
+# HELP immuclient_audit_run_at_per_server Timestamp in unix seconds at which latest audit run.
+# TYPE immuclient_audit_run_at_per_server gauge
+immuclient_audit_run_at_per_server{server_address=&quot;127.0.0.1:3322&quot;,server_id=&quot;br8eugq036tfln0ct6o0&quot;} 1.5907565337454605e+09
+</code></pre>
+<p>immuclient looks for immudb at 127.0.0.1:3322 by default with the default username and password. Nevertheless a number of parameters can be defined:</p>
+<pre><code>immuclient audit-mode            -  Run a foreground auditor
+immuclient audit-mode install    -  Install and runs daemon
+immuclient audit-mode stop       -  Stops the daemon
+immuclient audit-mode start      -  Starts initialized daemon
+immuclient audit-mode restart    -  Restarts daemon
+immuclient audit-mode uninstall  -  Removes daemon and its setup
+
+Flags:
+  -h, --help   help for audit-mode
+
+Global Flags:
+      --audit-databases string               Optional comma-separated list of databases (names) to be audited. Can be full name(s) or just name prefix(es).
+      --audit-monitoring-host string         Host for the monitoring HTTP server when running in audit mode (serves endpoints like metrics, health and version). (default &quot;0.0.0.0&quot;)
+      --audit-monitoring-port int            Port for the monitoring HTTP server when running in audit mode (serves endpoints like metrics, health and version). (default 9477)
+      --audit-notification-password string   Password used to authenticate when publishing audit result to 'audit-notification-url'.
+      --audit-notification-url string        If set, auditor will send a POST request at this URL with audit result details.
+      --audit-notification-username string   Username used to authenticate when publishing audit result to 'audit-notification-url'.
+      --audit-password string                immudb password used to login during audit; can be plain-text or base64 encoded (must be prefixed with 'enc:' if it is encoded)
+      --audit-username string                immudb username used to login during audit
+      --certificate string                   server certificate file path (default &quot;./tools/mtls/4_client/certs/localhost.cert.pem&quot;)
+      --clientcas string                     clients certificates list. Aka certificate authority (default &quot;./tools/mtls/2_intermediate/certs/ca-chain.cert.pem&quot;)
+      --config string                        config file (default path are configs or $HOME. Default filename is immuclient.toml)
+      --database string                      immudb database to be used
+      --dir string                           Main directory for audit process tool to initialize (default &quot;/var/folders/0z/wk6v4sjd31qbvt7l75t_z_v00000gn/T/&quot;)
+  -a, --immudb-address string                immudb host address (default &quot;127.0.0.1&quot;)
+  -p, --immudb-port int                      immudb port number (default 3322)
+      --max-recv-msg-size int                max message size in bytes the client can receive (default 4194304)
+  -m, --mtls                                 enable mutual tls
+      --password string                      immudb password used to login; can be plain-text or base64 encoded (must be prefixed with 'enc:' if it is encoded)
+      --pkey string                          server private key path (default &quot;./tools/mtls/4_client/private/localhost.key.pem&quot;)
+      --roots-filepath string                Filepath for storing root hashes after every successful audit loop. Default is tempdir of every OS. (default &quot;/tmp/&quot;)
+      --server-signing-pub-key string        Path to the public key to verify signatures when presents
+      --servername string                    used to verify the hostname on the returned certificates (default &quot;localhost&quot;)
+      --tokenfile string                     authentication token file (default path is $HOME or binary location; default filename is )
+      --username string                      immudb username used to login
+      --value-only                           returning only values for get operations
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h2 id="running-immuclient-auditor-as-a-service">Running immuclient Auditor as a service</h2>
+<p>immuclient as Auditor can be installed in the system with the following command:</p>
+<p>Install service:</p>
+<pre><code class="language-bash">immuclient audit-mode install
+</code></pre>
+<p>In this case, all parameters are written into the <code>immuclient</code> configuration file:
+* Linux: <code>/etc/immudb/immuclient.toml</code>
+* Windows: <code>C:\ProgramData\ImmuClient\config\immuclient.toml</code></p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h2 id="running-immuclient-auditor-with-docker">Running immuclient Auditor with docker</h2>
+<p>We also provide a docker image starting immuclient as Auditor:</p>
+<pre><code class="language-bash">docker pull codenotary/auditor
+</code></pre>
+<p>Then it's possible to run the command with:</p>
+<pre><code class="language-bash">docker run -it -e IMMUCLIENT_IMMUDB_ADDRESS=&quot;ip&quot; -e IMMUCLIENT_AUDIT_USERNAME=&quot;immudb&quot; -e IMMUCLIENT_AUDIT_PASSWORD=&quot;immudb&quot; codenotary/auditor
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h2 id="auditor-best-practices">Auditor best practices</h2>
+<h3 id="how-can-i-be-notified-if-my-immudb-instance-was-tampered">How can I be notified if my immudb instance was tampered?</h3>
+<p>It's possible to provide an external url that will be triggered in case a tamper is detected.
+By configuring <code>IMMUCLIENT_AUDIT_NOTIFICATION_URL</code>, a POST request will be sent with the following body:</p>
+<pre><code>{
+  &quot;current_state&quot;: {
+    &quot;hash&quot;: &quot;string&quot;,
+    &quot;signature&quot;: {
+      &quot;public_key&quot;: &quot;string&quot;,
+      &quot;signature&quot;: &quot;string&quot;
+    },
+    &quot;tx&quot;: 0
+  },
+  &quot;db&quot;: &quot;string&quot;,
+  &quot;password&quot;: &quot;string&quot;,
+  &quot;previous_state&quot;: {
+    &quot;hash&quot;: &quot;string&quot;,
+    &quot;signature&quot;: {
+      &quot;public_key&quot;: &quot;string&quot;,
+      &quot;signature&quot;: &quot;string&quot;
+    },
+    &quot;tx&quot;: 0
+  },
+  &quot;run_at&quot;: &quot;2020-11-13T00:53:42+01:00&quot;,
+  &quot;tampered&quot;: true,
+  &quot;username&quot;: &quot;string&quot;
+}
+</code></pre>
+<p>NOTE: it's not possible to know at which transaction the database was tampered. The Auditor checks every second if the data was tampered - so it's only possible to know at which time frame the tampering was detected.</p>
+<h3 id="how-many-auditors-should-i-run-to-secure-my-immudb-instance">How many Auditors should I run to secure my immudb instance?</h3>
+<p>A proper setup of one immuclient instance can fit most of cases, but there are ways to increase the security on detecting tampering. A single instance can go offline for any reason: network problems, hardware failures or attacks. Therefore a good practice can be to have multiple Auditor instances running in different zones.</p>
+<p></WrappedSection></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

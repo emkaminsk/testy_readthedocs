@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Backwards compatibility - My Docs</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href="../.." class="nav-link">Welcome to MkDocs</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../about/" class="nav-link">immudb explained</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../concepts/" class="nav-link">Concepts</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../releasenotes/" class="nav-link">Release Notes</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#backwards-compatibility" class="nav-link">Backwards compatibility</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="backwards-compatibility">Backwards compatibility</h1>
+<p><WrappedSection></p>
+<h3 id="immudb-11-proof-compatibility">immudb 1.1 proof compatibility</h3>
+<p>immudb 1.2 introduced KV metadata to support new features such as logical deletion or data expiration.
+This change required updates to the way a transaction hash is calculated.
+The downside of such change is that immudb clients using immudb 1.2+
+needed an updated method of proof calculation in order to verify newly added data.</p>
+<p>In some cases it is very hard or impossible to update the verification code on the client side.
+If this is the case, immudb offers a way to disable metadata to maintain compatibility with older clients.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h4 id="enabling-the-11-proof-compatibility-mode">Enabling the 1.1 proof compatibility mode</h4>
+<p><em>Note: backwards compatibility mode is currently not available for the <code>detaultdb</code> database.</em></p>
+<p>When creating new database, the mode can be specified with:</p>
+<pre><code class="language-bash">$ ./immuadmin database create &lt;db-name&gt; --write-tx-header-version 0
+</code></pre>
+<p>Enabling compatibility mode for existing databases can be done by:</p>
+<pre><code class="language-bash">$ ./immuadmin database update &lt;db-name&gt; --write-tx-header-version 0
+</code></pre>
+<p><em>Note: immudb restart is needed to make this change effective.</em></p>
+<p>In order to re-enable metadata-enhanced proofs,
+update database settings with <code>--write-tx-header-version 1</code> option.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h4 id="limitations-of-11-compatibility-mode">Limitations of 1.1 compatibility mode</h4>
+<p>Switching to 1.1-compatible proof mode will disable metadata support and thus will make the following operations unavailable:</p>
+<ul>
+<li>For KV interface:</li>
+<li>Logical deletion</li>
+<li>Data expiration</li>
+<li>Non-indexable entries</li>
+<li>For SQL interface:</li>
+<li>Logical deletion</li>
+<li>Updates to indexed columns</li>
+</ul>
+<p>Make sure to test your application before enabling the 1.1 compatibility mode.</p>
+<h4 id="working-with-database-that-already-contains-metadata-enhanced-entries">Working with database that already contains metadata-enhanced entries</h4>
+<p>Even though old clients can not validate proofs for metadata-enhanced records,
+those can still read the data without proofs as long as those don't use metadata.
+Operations such as <code>Get</code>, <code>Scan</code> or <code>History</code> will not cause errors in such workloads.</p>
+<p>If proofs are needed, KV entries that were previously added with metadata should
+be re-added to the database after enabling immudb 1.1 compatibility mode.</p>
+<p></WrappedSection></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
