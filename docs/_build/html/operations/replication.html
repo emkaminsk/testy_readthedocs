@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Replication &#8212; Immudb 1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="replication">
+<h1>Replication<a class="headerlink" href="#replication" title="Permalink to this heading">¶</a></h1>
+<WrappedSection>
+<section id="replication-strategy">
+<h2>Replication strategy<a class="headerlink" href="#replication-strategy" title="Permalink to this heading">¶</a></h2>
+<p>immudb includes support for replication by means of a follower approach. A database can be created or configured either to be a master or a replica of another database.</p>
+<div class="wrapped-picture">
+<p><img alt="replication using grpc clients" src="immudb/replication-servers.jpg" /></p>
+</div>
+<p>During replication, master databases have a passive role. The grpc endpoint <code class="docutils literal notranslate"><span class="pre">ExportTx</span></code> is used by replicas to fetch unseen committed transactions from the master.</p>
+<p>Replicas are read only and any direct write operation will be rejected. Using replicas allow to distribute query loads.</p>
+<div class="wrapped-picture">
+<p><img alt="replicator fetches committed txs via grpc calls and replicate them using in-process method invocations" src="immudb/replication-comm.jpg" /></p>
+</div>
+</WrappedSection>
+<WrappedSection>
+### Replication and users
+<p>As shown in the diagram above, the replicator fetches committed transaction from the master via grpc calls. Internally, the replicator instantiates an immudb client (using the official golang SDK) and fetches unseen committed transactions from the master. In order to do so, the replicator requires valid user credentials with admin permissions, otherwise the master will reject any request.</p>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="creating-a-replica">
+<h2>Creating a replica<a class="headerlink" href="#creating-a-replica" title="Permalink to this heading">¶</a></h2>
+<p>Creating a replica of an existent database using immuadmin is super easy:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuadmin login immudb
+Password:
+logged <span class="k">in</span>
+$ ./immuadmin database create --replication-enabled<span class="o">=</span><span class="nb">true</span> --replication-follower-username<span class="o">=</span>immudb --replication-follower-password<span class="o">=</span>immudb --replication-master-database<span class="o">=</span>defaultdb replicadb
+database <span class="s1">&#39;replicadb&#39;</span> <span class="o">{</span>replica: true<span class="o">}</span> successfully created
+</pre></div>
+</div>
+<p>::: tip
+Display all database creation flags with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuadmin <span class="nb">help</span> database create 
+</pre></div>
+</div>
+<p>:::</p>
+</section>
+<section id="creating-a-second-immudb-instance-to-replicate-systemdb-and-defaultdb-behaves-similarly">
+<h2>Creating a second immudb instance to replicate systemdb and defaultdb behaves similarly<a class="headerlink" href="#creating-a-second-immudb-instance-to-replicate-systemdb-and-defaultdb-behaves-similarly" title="Permalink to this heading">¶</a></h2>
+<p>Start immudb with enabled replication:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immudb --replication-enabled<span class="o">=</span><span class="nb">true</span> --replication-follower-password<span class="o">=</span>immudb  --replication-follower-username<span class="o">=</span>immudb --replication-master-address<span class="o">=</span><span class="m">127</span>.0.0.1
+</pre></div>
+</div>
+<p>::: tip
+Display all replication flags</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immudb --help
+</pre></div>
+</div>
+<p>:::</p>
+</WrappedSection>
+<WrappedSection>
+### Multiple replicas
+<p>It’s possible to create multiple replicas of a database. Each replica works independently of the others.</p>
+<div class="wrapped-picture">
+<p><img alt="multiple replicas of the same master database" src="immudb/replication-multiple.jpg" /></p>
+</div>
+<p>Given the master database acts in passive mode, there are no special steps needed in order to create more replicas. Thus, by repeating the same steps to create the first replica it’s possible to configure new ones.</p>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="replica-of-a-replica">
+<h2>Replica of a replica<a class="headerlink" href="#replica-of-a-replica" title="Permalink to this heading">¶</a></h2>
+<p>In case many replicas are needed or the master database is under heavy load, it’s possible to delegate the creation of replicas to an existent replica. This way, the master database is not affected by the total number of replicas being created.</p>
+<div class="wrapped-picture">
+<p><img alt="a replica indirectly following the master" src="immudb/replication-chain.jpg" /></p>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="external-replicator">
+<h2>External replicator<a class="headerlink" href="#external-replicator" title="Permalink to this heading">¶</a></h2>
+<p>By creating a database as a replica but with disabled replication, no replicator is created for the database and an external process could be used to replicate committed transactions from the master. The grpc endpoint <code class="docutils literal notranslate"><span class="pre">ReplicateTx</span></code> may be used to externally replicate a transaction.</p>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="heterogeneous-settings">
+<h2>Heterogeneous settings<a class="headerlink" href="#heterogeneous-settings" title="Permalink to this heading">¶</a></h2>
+<p>Replication is configured per database. Thus, the same immudb server may hold several master and replica databases at the same time.</p>
+<div class="wrapped-picture">
+<img src="/immudb/replication-server.jpg" width="300" alt="a single immudb server can hold multiple master and replica databases"/>
+</div>
+</WrappedSection>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Immudb</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">immudb explained</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to Immudb’s documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../releasenotes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/additional.html">Additional Resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/apis.html">gRPC API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/connection.html">Connecting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/deleting.html">Deleting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/embedding.html">Embedding immudb in your application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/expiration.html">Data Expiration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/history.html">Queries and history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/immugw.html">immugw</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/indexes.html">Secondary indexes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/management.html">Management operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/operations.html">State management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/reading.html">Reads And Writes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/streams.html">Streams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/transactions.html">Transactions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/catalog.html">Catalog queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/datatypes.html">Data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/embeddingSQL.html">Embedding immudb in your application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/indexes.html">Indexes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/insertupdate.html">Inserting or updating data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/pg.html">Pgsql protocol compatibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/querying.html">Querying</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/sqlstdlib.html">GO SQL std library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/tablesalter.html">Altering tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/tablescreate.html">Creating tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/sql/transactions.html">Transactions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Codenotary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/operations/replication.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,883 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Reads And Writes &#8212; Immudb 1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="reads-and-writes">
+<h1>Reads And Writes<a class="headerlink" href="#reads-and-writes" title="Permalink to this heading">¶</a></h1>
+<p>Most of the methods in SDKs have <code class="docutils literal notranslate"><span class="pre">Verified</span></code> equivalent, i.e. <code class="docutils literal notranslate"><span class="pre">Get</span></code> and <code class="docutils literal notranslate"><span class="pre">VerifiedGet</span></code>. The only difference is that with <code class="docutils literal notranslate"><span class="pre">Verified</span></code> methods proofs needed to mathematically verify that the data was not tampered are returned by the server and the verification is done automatically by SDKs.
+Note that generating that proof has a slight performance impact, so primitives are allowed without the proof.
+It is still possible to get the proofs for a specific item at any time, so the decision about when or how frequently to do checks (with the Verify version of a method) is completely up to the user.
+It’s possible also to use dedicated <a class="reference internal" href="../operations/auditor.html"><span class="doc std std-doc">auditors</span></a> to ensure the database consistency, but the pattern in which every client is also an auditor is the more interesting one.</p>
+<section id="get-and-set">
+<h2>Get and Set<a class="headerlink" href="#get-and-set" title="Permalink to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Get</span></code>/<code class="docutils literal notranslate"><span class="pre">VerifiedGet</span></code> and <code class="docutils literal notranslate"><span class="pre">Set</span></code>/<code class="docutils literal notranslate"><span class="pre">VerifiedSet</span></code> methods allow for basic operations on a Key Value level. In addition, <code class="docutils literal notranslate"><span class="pre">GetAll</span></code> and <code class="docutils literal notranslate"><span class="pre">SetAll</span></code> methods allow for adding and reading in a single transaction. See <a class="reference internal" href="transactions.html"><span class="doc std std-doc">transactions chapter</span></a> for more details.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">	</span><span class="s">&quot;context&quot;</span><span class="w"></span>
+<span class="w">	</span><span class="s">&quot;log&quot;</span><span class="w"></span>
+
+<span class="w">	</span><span class="s">&quot;github.com/codenotary/immudb/pkg/api/schema&quot;</span><span class="w"></span>
+<span class="w">	</span><span class="nx">immudb</span><span class="w"> </span><span class="s">&quot;github.com/codenotary/immudb/pkg/client&quot;</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="nx">opts</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">DefaultOptions</span><span class="p">().</span><span class="nx">WithAddress</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">).</span><span class="nx">WithPort</span><span class="p">(</span><span class="mi">3322</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="nx">client</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">NewClient</span><span class="p">().</span><span class="nx">WithOptions</span><span class="p">(</span><span class="nx">opts</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">OpenSession</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;defaultdb&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="k">defer</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">CloseSession</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">())</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// Without verification</span><span class="w"></span>
+<span class="w">	</span><span class="nx">tx</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`x`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`y`</span><span class="p">))</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Set: tx: %d&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">tx</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`x`</span><span class="p">))</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Get: %v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">tx</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">SetAll</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">SetRequest</span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">KVs</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="w"></span>
+<span class="w">			</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`1`</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`test1`</span><span class="p">)},</span><span class="w"></span>
+<span class="w">			</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`2`</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`test2`</span><span class="p">)},</span><span class="w"></span>
+<span class="w">			</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`3`</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`test3`</span><span class="p">)},</span><span class="w"></span>
+<span class="w">		</span><span class="p">},</span><span class="w"></span>
+<span class="w">	</span><span class="p">})</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;SetAll: tx: %d&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">tx</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">entries</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">GetAll</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[][]</span><span class="kt">byte</span><span class="p">{[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`1`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`2`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`3`</span><span class="p">)})</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;GetAll: %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entries</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// With verification</span><span class="w"></span>
+<span class="w">	</span><span class="nx">tx</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">VerifiedSet</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`xx`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`yy`</span><span class="p">))</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;VerifiedSet: tx: %d&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">tx</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`xx`</span><span class="p">))</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;VerifiedGet: %v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Python</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">immudb</span> <span class="kn">import</span> <span class="n">ImmudbClient</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">URL</span> <span class="o">=</span> <span class="s2">&quot;localhost:3322&quot;</span>  <span class="c1"># immudb running on your machine</span>
+<span class="n">LOGIN</span> <span class="o">=</span> <span class="s2">&quot;immudb&quot;</span>        <span class="c1"># Default username</span>
+<span class="n">PASSWORD</span> <span class="o">=</span> <span class="s2">&quot;immudb&quot;</span>     <span class="c1"># Default password</span>
+<span class="n">DB</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;defaultdb&quot;</span>       <span class="c1"># Default database name (must be in bytes)</span>
+
+<span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">what</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="n">what</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">what</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">ImmudbClient</span><span class="p">(</span><span class="n">URL</span><span class="p">)</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">LOGIN</span><span class="p">,</span> <span class="n">PASSWORD</span><span class="p">,</span> <span class="n">database</span> <span class="o">=</span> <span class="n">DB</span><span class="p">)</span>
+    
+    <span class="c1"># You have to operate on bytes</span>
+    <span class="n">setResult</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">setResult</span><span class="p">)</span>            <span class="c1"># immudb.datatypes.SetResponse</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">setResult</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>         <span class="c1"># id of transaction</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">setResult</span><span class="o">.</span><span class="n">verified</span><span class="p">)</span>   <span class="c1"># in this case verified = False</span>
+                                <span class="c1"># see Tamperproof reading and writing</span>
+
+    <span class="c1"># Also you get response in bytes</span>
+    <span class="n">retrieved</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">retrieved</span><span class="p">)</span>        <span class="c1"># immudb.datatypes.GetResponse</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">retrieved</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>    <span class="c1"># Value is b&#39;x&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">retrieved</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Value is b&#39;y&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">retrieved</span><span class="o">.</span><span class="n">tx</span><span class="p">)</span>     <span class="c1"># Transaction number</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">retrieved</span><span class="o">.</span><span class="n">key</span><span class="p">))</span>      <span class="c1"># &lt;class &#39;bytes&#39;&gt;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">retrieved</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>    <span class="c1"># &lt;class &#39;bytes&#39;&gt;</span>
+
+    <span class="c1"># Operating with strings</span>
+    <span class="n">encodedHello</span> <span class="o">=</span> <span class="n">encode</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+    <span class="n">encodedImmutable</span> <span class="o">=</span> <span class="n">encode</span><span class="p">(</span><span class="s2">&quot;Immutable&quot;</span><span class="p">)</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">encodedHello</span><span class="p">,</span> <span class="n">encodedImmutable</span><span class="p">)</span>
+    <span class="n">retrieved</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">encodedHello</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">decode</span><span class="p">(</span><span class="n">retrieved</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;Immutable&quot;</span><span class="p">)</span>   <span class="c1"># Value is True</span>
+
+    <span class="n">notExisting</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;asdasd&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">notExisting</span><span class="p">)</span>                              <span class="c1"># Value is None</span>
+
+
+    <span class="c1"># JSON example</span>
+    <span class="n">toSet</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;hello&quot;</span><span class="p">:</span> <span class="s2">&quot;immutable&quot;</span><span class="p">}</span>
+    <span class="n">encodedToSet</span> <span class="o">=</span> <span class="n">encode</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">toSet</span><span class="p">))</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">encodedHello</span><span class="p">,</span> <span class="n">encodedToSet</span><span class="p">)</span>
+
+    <span class="n">retrieved</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">decode</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">encodedHello</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">retrieved</span><span class="p">)</span>    <span class="c1"># Value is {&quot;hello&quot;: &quot;immutable&quot;}</span>
+
+    <span class="c1"># setAll example - sets all keys to value from dictionary</span>
+    <span class="n">toSet</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sa">b</span><span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;test1&#39;</span><span class="p">,</span>
+        <span class="sa">b</span><span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;test2&#39;</span><span class="p">,</span>
+        <span class="sa">b</span><span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;test3&#39;</span>
+    <span class="p">}</span>
+
+    <span class="n">client</span><span class="o">.</span><span class="n">setAll</span><span class="p">(</span><span class="n">toSet</span><span class="p">)</span>
+    <span class="n">retrieved</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">getAll</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">toSet</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">retrieved</span><span class="p">)</span> 
+    <span class="c1"># Value is {b&#39;1&#39;: b&#39;test1&#39;, b&#39;2&#39;: b&#39;test2&#39;, b&#39;3&#39;: b&#39;test3&#39;}</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">String</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;key1&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="kt">byte</span><span class="o">[]</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">byte</span><span class="o">[]</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">immuClient</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">CorruptedDataException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">immuClient</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">key</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">value</span></code> is a primitive byte array. You can set the value of a String using:<br/>
+<code class="docutils literal notranslate"><span class="pre">&quot;some</span> <span class="pre">string&quot;.getBytes(StandardCharsets.UTF_8)</span></code></p>
+<p>Also, <code class="docutils literal notranslate"><span class="pre">set</span></code> method is overloaded to allow receiving the <code class="docutils literal notranslate"><span class="pre">key</span></code> parameter as a <code class="docutils literal notranslate"><span class="pre">byte[]</span></code> data type.</p>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<div class="highlight-ts notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nx">ImmudbClient</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;immudb-node&#39;</span><span class="w"></span>
+<span class="k">import</span><span class="w"> </span><span class="nx">Parameters</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;immudb-node/types/parameters&#39;</span><span class="w"></span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_HOST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;127.0.0.1&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_PORT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;3322&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_USER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;immudb&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_PWD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;immudb&#39;</span><span class="w"></span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">cl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ImmudbClient</span><span class="p">({</span><span class="w"> </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_HOST</span><span class="p">,</span><span class="w"> </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_PORT</span><span class="w"> </span><span class="p">});</span><span class="w"></span>
+
+<span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">login</span><span class="p">({</span><span class="w"> </span><span class="nx">user</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_USER</span><span class="p">,</span><span class="w"> </span><span class="nx">password</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_PWD</span><span class="w"> </span><span class="p">})</span><span class="w"></span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">setReq</span><span class="o">:</span><span class="w"> </span><span class="kt">Parameters.Set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;hello&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;world&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">setRes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">setReq</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;success: set&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">setRes</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">getReq</span><span class="o">:</span><span class="w"> </span><span class="kt">Parameters.Get</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;hello&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">getRes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">getReq</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;success: get&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">getRes</span><span class="p">)</span><span class="w"></span>
+<span class="p">})()</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Others
+If you’re using another development language, please refer to the <a class="reference internal" href="immugw.html"><span class="doc std std-doc">immugw</span></a> option.
+:::</p>
+<p>::::</p>
+</section>
+<section id="get-at-and-since-a-transaction">
+<h2>Get at and since a transaction<a class="headerlink" href="#get-at-and-since-a-transaction" title="Permalink to this heading">¶</a></h2>
+<p>You can retrieve a key on a specific transaction with <code class="docutils literal notranslate"><span class="pre">GetAt</span></code>/<code class="docutils literal notranslate"><span class="pre">VerifiedGetAt</span></code>. If you need to check the last value of a key after given transaction (which represent state of the indexer), you can use <code class="docutils literal notranslate"><span class="pre">GetSince</span></code>/<code class="docutils literal notranslate"><span class="pre">VerifiedGetSince</span></code>.
+:::: tabs</p>
+<p>::: tab Go</p>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">	</span><span class="s">&quot;context&quot;</span><span class="w"></span>
+<span class="w">	</span><span class="s">&quot;log&quot;</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">immudb</span><span class="w"> </span><span class="s">&quot;github.com/codenotary/immudb/pkg/client&quot;</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="nx">opts</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">DefaultOptions</span><span class="p">().</span><span class="nx">WithAddress</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">).</span><span class="nx">WithPort</span><span class="p">(</span><span class="mi">3322</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="nx">client</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">NewClient</span><span class="p">().</span><span class="nx">WithOptions</span><span class="p">(</span><span class="nx">opts</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">OpenSession</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;defaultdb&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="k">defer</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">CloseSession</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">())</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">key</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`123123`</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="kd">var</span><span class="w"> </span><span class="nx">txIDs</span><span class="w"> </span><span class="p">[]</span><span class="kt">uint64</span><span class="w"></span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="p">[][]</span><span class="kt">byte</span><span class="p">{[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`111`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`222`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`333`</span><span class="p">)}</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">txID</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="p">)</span><span class="w"></span>
+<span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">			</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">		</span><span class="p">}</span><span class="w"></span>
+<span class="w">		</span><span class="nx">txIDs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">txIDs</span><span class="p">,</span><span class="w"> </span><span class="nx">txID</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">otherTxID</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`other`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`other`</span><span class="p">))</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// Without verification</span><span class="w"></span>
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">GetSince</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">txIDs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;GetSince first: %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// With verification</span><span class="w"></span>
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">VerifiedGetSince</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">txIDs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;VerifiedGetSince second: %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// GetAt txID after inserting other data</span><span class="w"></span>
+<span class="w">	</span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">GetAt</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">otherTxID</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatalf</span><span class="p">(</span><span class="s">&quot;This should not happen, %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// Without verification</span><span class="w"></span>
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">GetAt</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">txIDs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;GetAt second: %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// With verification</span><span class="w"></span>
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">VerifiedGetAt</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">txIDs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;VerifiedGetAt third: %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// VerifiedGetAt txID after inserting other data</span><span class="w"></span>
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">VerifiedGetAt</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">otherTxID</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatalf</span><span class="p">(</span><span class="s">&quot;This should not happen, %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Python</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">grpc</span> <span class="kn">import</span> <span class="n">RpcError</span>
+<span class="kn">from</span> <span class="nn">immudb</span> <span class="kn">import</span> <span class="n">ImmudbClient</span>
+
+<span class="n">URL</span> <span class="o">=</span> <span class="s2">&quot;localhost:3322&quot;</span>  <span class="c1"># immudb running on your machine</span>
+<span class="n">LOGIN</span> <span class="o">=</span> <span class="s2">&quot;immudb&quot;</span>        <span class="c1"># Default username</span>
+<span class="n">PASSWORD</span> <span class="o">=</span> <span class="s2">&quot;immudb&quot;</span>     <span class="c1"># Default password</span>
+<span class="n">DB</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;defaultdb&quot;</span>       <span class="c1"># Default database name (must be in bytes)</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">ImmudbClient</span><span class="p">(</span><span class="n">URL</span><span class="p">)</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">LOGIN</span><span class="p">,</span> <span class="n">PASSWORD</span><span class="p">,</span> <span class="n">database</span> <span class="o">=</span> <span class="n">DB</span><span class="p">)</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;justfirsttransaction&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;justfirsttransaction&#39;</span><span class="p">)</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;123123&#39;</span>
+
+    <span class="n">first</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;111&#39;</span><span class="p">)</span>
+    <span class="n">firstTransaction</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="n">second</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;222&#39;</span><span class="p">)</span>
+    <span class="n">secondTransaction</span> <span class="o">=</span> <span class="n">second</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="n">third</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;333&#39;</span><span class="p">)</span>
+    <span class="n">thirdTransaction</span> <span class="o">=</span> <span class="n">third</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">verifiedGetSince</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">firstTransaction</span><span class="p">))</span>   <span class="c1"># b&quot;111&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">verifiedGetSince</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">firstTransaction</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>   <span class="c1"># b&quot;222&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># This key wasn&#39;t set on this transaction</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">verifiedGetAt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">firstTransaction</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">RpcError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">exception</span><span class="o">.</span><span class="n">debug_error_string</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">exception</span><span class="o">.</span><span class="n">details</span><span class="p">())</span>
+
+    <span class="n">verifiedFirst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">verifiedGetAt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">firstTransaction</span><span class="p">)</span> 
+                                    <span class="c1"># immudb.datatypes.SafeGetResponse</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">verifiedFirst</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>         <span class="c1"># id of transaction</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">verifiedFirst</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>        <span class="c1"># Key that was modified</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">verifiedFirst</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>      <span class="c1"># Value after this transaction</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">verifiedFirst</span><span class="o">.</span><span class="n">refkey</span><span class="p">)</span>     <span class="c1"># Reference key</span>
+									<span class="c1"># (Queries And History -&gt; setReference)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">verifiedFirst</span><span class="o">.</span><span class="n">verified</span><span class="p">)</span>   <span class="c1"># Response is verified or not</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">verifiedFirst</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>  <span class="c1"># Time of this transaction</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">verifiedGetAt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">secondTransaction</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">verifiedGetAt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">thirdTransaction</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Transaction doesn&#39;t exists yet</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">verifiedGetAt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">thirdTransaction</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">RpcError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">exception</span><span class="o">.</span><span class="n">debug_error_string</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">exception</span><span class="o">.</span><span class="n">details</span><span class="p">())</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kt">byte</span><span class="o">[]</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;key1&quot;</span><span class="p">.</span><span class="na">getBytes</span><span class="p">(</span><span class="n">StandardCharsets</span><span class="p">.</span><span class="na">UTF_8</span><span class="p">);</span><span class="w"></span>
+<span class="kt">byte</span><span class="o">[]</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">byte</span><span class="o">[]</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">};</span><span class="w"></span>
+<span class="n">TxMetadata</span><span class="w"> </span><span class="n">txMd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">txMd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">immuClient</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">CorruptedDataException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="c1">// The standard (traditional) get options:</span><span class="w"></span>
+
+<span class="n">KV</span><span class="w"> </span><span class="n">kv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">immuClient</span><span class="p">.</span><span class="na">getAt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">txMd</span><span class="p">.</span><span class="na">id</span><span class="p">);</span><span class="w"></span>
+
+<span class="n">kv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">immuClient</span><span class="p">.</span><span class="na">getSince</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">txMd</span><span class="p">.</span><span class="na">id</span><span class="p">);</span><span class="w"></span>
+
+<span class="c1">// The verified get flavours:</span><span class="w"></span>
+
+<span class="n">Entry</span><span class="w"> </span><span class="n">vEntry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w"></span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">vEntry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">immuClient</span><span class="p">.</span><span class="na">verifiedGetAt</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">vEntry</span><span class="p">.</span><span class="na">txId</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">VerificationException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">vEntry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">immuClient</span><span class="p">.</span><span class="na">verifiedGetSince</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">vEntry</span><span class="p">.</span><span class="na">txId</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">VerificationException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<div class="highlight-ts notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nx">ImmudbClient</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;immudb-node&#39;</span><span class="w"></span>
+<span class="k">import</span><span class="w"> </span><span class="nx">Parameters</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;immudb-node/types/parameters&#39;</span><span class="w"></span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_HOST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;127.0.0.1&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_PORT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;3322&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_USER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;immudb&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_PWD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;immudb&#39;</span><span class="w"></span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">cl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ImmudbClient</span><span class="p">({</span><span class="w"> </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_HOST</span><span class="p">,</span><span class="w"> </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_PORT</span><span class="w"> </span><span class="p">});</span><span class="w"></span>
+
+<span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">login</span><span class="p">({</span><span class="w"> </span><span class="nx">user</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_USER</span><span class="p">,</span><span class="w"> </span><span class="nx">password</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_PWD</span><span class="w"> </span><span class="p">})</span><span class="w"></span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;key&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;value&#39;</span><span class="w"> </span><span class="p">})</span><span class="w"></span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">verifiedGetAtReq</span><span class="o">:</span><span class="w"> </span><span class="kt">Parameters.VerifiedGetAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;key&#39;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="nx">attx</span><span class="o">:</span><span class="w"> </span><span class="kt">id</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">verifiedGetAtRes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">verifiedGetAt</span><span class="p">(</span><span class="nx">verifiedGetAtReq</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;success: verifiedGetAt&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">verifiedGetAtRes</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">4</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;key&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="sb">`value-</span><span class="si">${</span><span class="nx">i</span><span class="si">}</span><span class="sb">`</span><span class="w"> </span><span class="p">})</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">verifiedGetSinceReq</span><span class="o">:</span><span class="w"> </span><span class="kt">Parameters.VerifiedGetSince</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;key&#39;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="nx">sincetx</span><span class="o">:</span><span class="w"> </span><span class="kt">2</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">verifiedGetSinceRes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">verifiedGetSince</span><span class="p">(</span><span class="nx">verifiedGetSinceReq</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;success: verifiedGetSince&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">verifiedGetSinceRes</span><span class="p">)</span><span class="w"></span>
+<span class="p">})()</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Others
+If you’re using another development language, please refer to the <a class="reference internal" href="immugw.html"><span class="doc std std-doc">immugw</span></a> option.
+:::</p>
+<p>::::</p>
+</section>
+<section id="get-at-revision">
+<h2>Get at revision<a class="headerlink" href="#get-at-revision" title="Permalink to this heading">¶</a></h2>
+<p>Each historical value for a single key is attached a revision number.
+Revision numbers start with 1 and each overwrite of the same key results in
+a new sequential revision number assignment.</p>
+<p>A negative revision number can also be specified which means the nth historical value,
+e.g. -1 is the previous value, -2 is the one before and so on.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">	</span><span class="s">&quot;context&quot;</span><span class="w"></span>
+<span class="w">	</span><span class="s">&quot;log&quot;</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">immudb</span><span class="w"> </span><span class="s">&quot;github.com/codenotary/immudb/pkg/client&quot;</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="nx">opts</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">DefaultOptions</span><span class="p">().</span><span class="nx">WithAddress</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">).</span><span class="nx">WithPort</span><span class="p">(</span><span class="mi">3322</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="nx">client</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">NewClient</span><span class="p">().</span><span class="nx">WithOptions</span><span class="p">(</span><span class="nx">opts</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">OpenSession</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;defaultdb&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="k">defer</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">CloseSession</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">())</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// Use dedicated API call</span><span class="w"></span>
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">GetAtRevision</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">),</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Retrieved entry at revision %d: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">Revision</span><span class="p">,</span><span class="w"> </span><span class="nb">string</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">Value</span><span class="p">))</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// Use additional get option</span><span class="w"></span>
+<span class="w">	</span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">AtRevision</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Retrieved entry at revision %d: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">Revision</span><span class="p">,</span><span class="w"> </span><span class="nb">string</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">Value</span><span class="p">))</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Python
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Java
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb4j/issues/new">Java sdk github project</a>
+:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you’re using another development language, please refer to the <a class="reference internal" href="immugw.html"><span class="doc std std-doc">immugw</span></a> option.
+:::</p>
+<p>::::</p>
+</section>
+<section id="get-at-txid">
+<h2>Get at TXID<a class="headerlink" href="#get-at-txid" title="Permalink to this heading">¶</a></h2>
+<p>It’s possible to retrieve all the keys inside a specific transaction.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w"></span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">	</span><span class="s">&quot;context&quot;</span><span class="w"></span>
+<span class="w">	</span><span class="s">&quot;log&quot;</span><span class="w"></span>
+
+<span class="w">	</span><span class="s">&quot;github.com/codenotary/immudb/pkg/api/schema&quot;</span><span class="w"></span>
+<span class="w">	</span><span class="nx">immudb</span><span class="w"> </span><span class="s">&quot;github.com/codenotary/immudb/pkg/client&quot;</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="nx">opts</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">DefaultOptions</span><span class="p">().</span><span class="nx">WithAddress</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">).</span><span class="nx">WithPort</span><span class="p">(</span><span class="mi">3322</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="nx">client</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immudb</span><span class="p">.</span><span class="nx">NewClient</span><span class="p">().</span><span class="nx">WithOptions</span><span class="p">(</span><span class="nx">opts</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">OpenSession</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;defaultdb&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="k">defer</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">CloseSession</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">())</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">setTxFirst</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">SetAll</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"></span>
+<span class="w">		</span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">SetRequest</span><span class="p">{</span><span class="nx">KVs</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="w"></span>
+<span class="w">			</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;val1&quot;</span><span class="p">)},</span><span class="w"></span>
+<span class="w">			</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key2&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;val2&quot;</span><span class="p">)},</span><span class="w"></span>
+<span class="w">		</span><span class="p">}})</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;First txID: %d&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">setTxFirst</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// Set keys in another transaction</span><span class="w"></span>
+<span class="w">	</span><span class="nx">setTxSecond</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">SetAll</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"></span>
+<span class="w">		</span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">SetRequest</span><span class="p">{</span><span class="nx">KVs</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="w"></span>
+<span class="w">			</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;val11&quot;</span><span class="p">)},</span><span class="w"></span>
+<span class="w">			</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key2&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;val22&quot;</span><span class="p">)},</span><span class="w"></span>
+<span class="w">		</span><span class="p">}})</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;Second txID: %d&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">setTxSecond</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// Without verification</span><span class="w"></span>
+<span class="w">	</span><span class="nx">tx</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">TxByID</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">setTxFirst</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">tx</span><span class="p">.</span><span class="nx">Entries</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">item</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">GetAt</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">Key</span><span class="p">,</span><span class="w"> </span><span class="nx">setTxFirst</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+<span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">			</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">		</span><span class="p">}</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;retrieved: %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">item</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="c1">// With verification</span><span class="w"></span>
+<span class="w">	</span><span class="nx">tx</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">VerifiedTxByID</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">setTxSecond</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">tx</span><span class="p">.</span><span class="nx">Entries</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">item</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">VerifiedGetAt</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">(),</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">Key</span><span class="p">,</span><span class="w"> </span><span class="nx">setTxSecond</span><span class="p">.</span><span class="nx">Id</span><span class="p">)</span><span class="w"></span>
+<span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">			</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">		</span><span class="p">}</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;retrieved: %+v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">item</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Python</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">immudb</span> <span class="kn">import</span> <span class="n">ImmudbClient</span>
+
+<span class="n">URL</span> <span class="o">=</span> <span class="s2">&quot;localhost:3322&quot;</span>  <span class="c1"># immudb running on your machine</span>
+<span class="n">LOGIN</span> <span class="o">=</span> <span class="s2">&quot;immudb&quot;</span>        <span class="c1"># Default username</span>
+<span class="n">PASSWORD</span> <span class="o">=</span> <span class="s2">&quot;immudb&quot;</span>     <span class="c1"># Default password</span>
+<span class="n">DB</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;defaultdb&quot;</span>       <span class="c1"># Default database name (must be in bytes)</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">ImmudbClient</span><span class="p">(</span><span class="n">URL</span><span class="p">)</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">LOGIN</span><span class="p">,</span> <span class="n">PASSWORD</span><span class="p">,</span> <span class="n">database</span> <span class="o">=</span> <span class="n">DB</span><span class="p">)</span>
+
+    <span class="n">keyFirst</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;333&#39;</span>
+    <span class="n">keySecond</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;555&#39;</span>
+
+    <span class="n">first</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">keyFirst</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;111&#39;</span><span class="p">)</span>
+    <span class="n">firstTransaction</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="n">second</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">keySecond</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;222&#39;</span><span class="p">)</span>
+    <span class="n">secondTransaction</span> <span class="o">=</span> <span class="n">second</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="n">toSet</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sa">b</span><span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;test1&#39;</span><span class="p">,</span>
+        <span class="sa">b</span><span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;test2&#39;</span><span class="p">,</span>
+        <span class="sa">b</span><span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;test3&#39;</span>
+    <span class="p">}</span>
+
+    <span class="n">third</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">setAll</span><span class="p">(</span><span class="n">toSet</span><span class="p">)</span>
+    <span class="n">thirdTransaction</span> <span class="o">=</span> <span class="n">third</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="n">keysAtFirst</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">txById</span><span class="p">(</span><span class="n">firstTransaction</span><span class="p">)</span>
+    <span class="n">keysAtSecond</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">txById</span><span class="p">(</span><span class="n">secondTransaction</span><span class="p">)</span>
+    <span class="n">keysAtThird</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">txById</span><span class="p">(</span><span class="n">thirdTransaction</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">keysAtFirst</span><span class="p">)</span>  <span class="c1"># [b&#39;333&#39;]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">keysAtSecond</span><span class="p">)</span> <span class="c1"># [b&#39;555&#39;]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">keysAtThird</span><span class="p">)</span>  <span class="c1"># [b&#39;1&#39;, b&#39;2&#39;, b&#39;3&#39;]</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">TxMetadata</span><span class="w"> </span><span class="n">txMd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w"></span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">txMd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">immuClient</span><span class="p">.</span><span class="na">verifiedSet</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">VerificationException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">Tx</span><span class="w"> </span><span class="n">tx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">immuClient</span><span class="p">.</span><span class="na">txById</span><span class="p">(</span><span class="n">txMd</span><span class="p">.</span><span class="na">id</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">MaxWidthExceededException</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">NoSuchAlgorithmException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<div class="highlight-ts notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nx">ImmudbClient</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;immudb-node&#39;</span><span class="w"></span>
+<span class="k">import</span><span class="w"> </span><span class="nx">Parameters</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;immudb-node/types/parameters&#39;</span><span class="w"></span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_HOST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;127.0.0.1&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_PORT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;3322&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_USER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;immudb&#39;</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">IMMUDB_PWD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;immudb&#39;</span><span class="w"></span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">cl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ImmudbClient</span><span class="p">({</span><span class="w"> </span><span class="nx">host</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_HOST</span><span class="p">,</span><span class="w"> </span><span class="nx">port</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_PORT</span><span class="w"> </span><span class="p">});</span><span class="w"></span>
+
+<span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">login</span><span class="p">({</span><span class="w"> </span><span class="nx">user</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_USER</span><span class="p">,</span><span class="w"> </span><span class="nx">password</span><span class="o">:</span><span class="w"> </span><span class="kt">IMMUDB_PWD</span><span class="w"> </span><span class="p">})</span><span class="w"></span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;key&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;value&#39;</span><span class="w"> </span><span class="p">})</span><span class="w"></span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">txByIdReq</span><span class="o">:</span><span class="w"> </span><span class="kt">Parameters.TxById</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">tx</span><span class="o">:</span><span class="w"> </span><span class="kt">id</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">txByIdRes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">cl</span><span class="p">.</span><span class="nx">txById</span><span class="p">(</span><span class="nx">txByIdReq</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;success: txById&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">txByIdRes</span><span class="p">)</span><span class="w"></span>
+<span class="p">})()</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Others
+If you’re using another development language, please refer to the <a class="reference internal" href="immugw.html"><span class="doc std std-doc">immugw</span></a> option.
+:::</p>
+<p>::::</p>
+</section>
+<section id="conditional-writes">
+<h2>Conditional writes<a class="headerlink" href="#conditional-writes" title="Permalink to this heading">¶</a></h2>
+<p>immudb can check additional preconditions before the write operation is made.
+Precondition is checked atomically with the write operation.
+It can be then used to ensure consistent state of data inside the database.</p>
+<p>Following preconditions are supported:</p>
+<ul class="simple">
+<li><p>MustExist - precondition checks if given key exists in the database,
+this precondition takes into consideration logical deletion and data expiration,
+if the entry was logically deleted or has expired, MustExist precondition for
+such entry will fail</p></li>
+<li><p>MustNotExist - precondition checks if given key does not exist in the database,
+this precondition also takes into consideration logical deletion and data expiration,
+if the entry was logically deleted or has expired, MustNotExist precondition for
+such entry will succeed</p></li>
+<li><p>NotModifiedAfterTX - precondition checks if given key was not modified after given transaction id,
+local deletion and setting entry with expiration data is also considered modification of the
+entry</p></li>
+</ul>
+<p>In many cases, keys used for constraints will be the same as keys for written entries.
+A good example here is a situation when a value is set only if that key does not exist.
+This is not strictly required - keys used in constraints do not have to be the same
+or even overlap with keys for modified entries. An example would be if only one of
+two keys should exist in the database. In such case, the first key will be modified
+and the second key will be used for MustNotExist constraint.</p>
+<p>A write operation using precondition can not be done in an asynchronous way.
+Preconditions are checked twice when processing such requests - first check is done
+against the current state of internal index, the second check is done just before
+persisting the write and requires up-to-date index.</p>
+<p>Preconditions are available on <code class="docutils literal notranslate"><span class="pre">SetAll</span></code>, <code class="docutils literal notranslate"><span class="pre">Reference</span></code> and <code class="docutils literal notranslate"><span class="pre">ExecAll</span></code> operations.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<p>In go sdk, the <code class="docutils literal notranslate"><span class="pre">schema</span></code> package contains convenient wrappers for creating constraint objects,
+such as <code class="docutils literal notranslate"><span class="pre">schema.PreconditionKeyMustNotExist</span></code>.</p>
+<section id="example-ensure-modification-is-done-atomically-when-there-are-concurrent-writers">
+<h3>Example - ensure modification is done atomically when there are concurrent writers<a class="headerlink" href="#example-ensure-modification-is-done-atomically-when-there-are-concurrent-writers" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="nx">newValue</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">modifyValue</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">Value</span><span class="p">)</span><span class="w"></span>
+
+<span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">SetAll</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">SetRequest</span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">KVs</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">Key</span><span class="p">:</span><span class="w">   </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="nx">newValue</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="p">}},</span><span class="w"></span>
+<span class="w">    </span><span class="nx">Preconditions</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Precondition</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">schema</span><span class="p">.</span><span class="nx">PreconditionKeyNotModifiedAfterTX</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="nx">entry</span><span class="p">.</span><span class="nx">Tx</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="p">})</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="example-allow-setting-the-key-only-once">
+<h3>Example - allow setting the key only once<a class="headerlink" href="#example-allow-setting-the-key-only-once" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="nx">tx</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">SetAll</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">SetRequest</span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">KVs</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;val&quot;</span><span class="p">)},</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nx">Preconditions</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Precondition</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">schema</span><span class="p">.</span><span class="nx">PreconditionKeyMustNotExist</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">)),</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="p">})</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="example-set-only-one-key-in-a-group-of-keys">
+<h3>Example - set only one key in a group of keys<a class="headerlink" href="#example-set-only-one-key-in-a-group-of-keys" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="nx">tx</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">SetAll</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">SetRequest</span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">KVs</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;val1&quot;</span><span class="p">)},</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nx">Preconditions</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Precondition</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">schema</span><span class="p">.</span><span class="nx">PreconditionKeyMustNotExist</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key2&quot;</span><span class="p">)),</span><span class="w"></span>
+<span class="w">        </span><span class="nx">schema</span><span class="p">.</span><span class="nx">PreconditionKeyMustNotExist</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key3&quot;</span><span class="p">)),</span><span class="w"></span>
+<span class="w">        </span><span class="nx">schema</span><span class="p">.</span><span class="nx">PreconditionKeyMustNotExist</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key4&quot;</span><span class="p">)),</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="p">})</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="example-check-if-returned-error-indicates-precondition-failure">
+<h3>Example - check if returned error indicates precondition failure<a class="headerlink" href="#example-check-if-returned-error-indicates-precondition-failure" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="nx">immuerrors</span><span class="w"> </span><span class="s">&quot;github.com/codenotary/immudb/pkg/client/errors&quot;</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+
+<span class="o">...</span><span class="w"></span>
+
+<span class="nx">tx</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">SetAll</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">SetRequest</span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">KVs</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">),</span><span class="w"> </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;val&quot;</span><span class="p">)},</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nx">Preconditions</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Precondition</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">schema</span><span class="p">.</span><span class="nx">PreconditionKeyMustExist</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">)),</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="p">})</span><span class="w"></span>
+<span class="nx">immuErr</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immuerrors</span><span class="p">.</span><span class="nx">FromError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="nx">immuErr</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">immuErr</span><span class="p">.</span><span class="nx">Code</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">immuerrors</span><span class="p">.</span><span class="nx">CodIntegrityConstraintViolation</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Constraint validation failed&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Python
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Java
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb4j">Java sdk github project</a>
+:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you’re using another development language, please refer to the <a class="reference internal" href="immugw.html"><span class="doc std std-doc">immugw</span></a> option.
+:::</p>
+<p>::::</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Immudb</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Codenotary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/develop/reading.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Streams &#8212; Immudb 1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="streams">
+<h1>Streams<a class="headerlink" href="#streams" title="Permalink to this heading">¶</a></h1>
+<p>immudb provides stream capabilities.
+Internally it uses “delimited” messages technique, every chunk has a trailer that describe the length of the message. In this way the receiver can recompose chunk by chunk the original payload.
+Stream methods accepts a <code class="docutils literal notranslate"><span class="pre">readers</span></code> as a part of input and output arguments. In this way the large value is decomposed in small chunks that are streamed over the wire.
+Client don’t need to allocate the entire value when sending and can read the received one progressively.
+For example a client could send a large file much greater than available ram memory.</p>
+<blockquote>
+<div><p>At the moment <code class="docutils literal notranslate"><span class="pre">immudb</span></code> is not yet able to write the data without allocating the entire received object, but in the next release it will be possible a complete communication without allocations.
+The maximum size of a transaction sent with streams is temporarily limited to a payload of 32M.</p>
+</div></blockquote>
+<p>Supported stream method now available in the SDK are:</p>
+<CustomList class="no-horizontal-padding" size="wide">
+<ul class="simple">
+<li><p>StreamSet</p></li>
+<li><p>StreamGet</p></li>
+<li><p>StreamVerifiedSet</p></li>
+<li><p>StreamVerifiedGet</p></li>
+<li><p>StreamScan</p></li>
+<li><p>StreamZScan</p></li>
+<li><p>StreamHistory</p></li>
+<li><p>StreamExecAll</p></li>
+</ul>
+</CustomList>
+<p>:::: tabs</p>
+<p>::: tab Go
+Here an example on how to send a large file and a regular key value to immudb.</p>
+<p>It’s possible to specify the chunk size of the stream with <code class="docutils literal notranslate"><span class="pre">WithStreamChunkSize()</span></code> method.</p>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="nx">client</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">immuclient</span><span class="p">.</span><span class="nx">NewImmuClient</span><span class="p">(</span><span class="nx">immuclient</span><span class="p">.</span><span class="nx">DefaultOptions</span><span class="p">().</span><span class="nx">WithStreamChunkSize</span><span class="p">(</span><span class="mi">4096</span><span class="p">))</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="nx">ctx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Background</span><span class="p">()</span><span class="w"></span>
+<span class="w">    </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">Login</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">),</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`immudb`</span><span class="p">))</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="nx">myFileName</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&quot;streams.go&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nx">key1</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;key1&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nx">val1</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&quot;val1&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nx">f</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">myFileName</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="nx">stats</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Stat</span><span class="p">(</span><span class="nx">myFileName</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="nx">kv1</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">stream</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">stream</span><span class="p">.</span><span class="nx">ValueSize</span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nx">Content</span><span class="p">:</span><span class="w"> </span><span class="nx">bytes</span><span class="p">.</span><span class="nx">NewBuffer</span><span class="p">(</span><span class="nx">key1</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="nx">Size</span><span class="p">:</span><span class="w">    </span><span class="nb">len</span><span class="p">(</span><span class="nx">key1</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">stream</span><span class="p">.</span><span class="nx">ValueSize</span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nx">Content</span><span class="p">:</span><span class="w"> </span><span class="nx">bytes</span><span class="p">.</span><span class="nx">NewBuffer</span><span class="p">(</span><span class="nx">val1</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="nx">Size</span><span class="p">:</span><span class="w">    </span><span class="nb">len</span><span class="p">(</span><span class="nx">val1</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="nx">kv2</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">stream</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">stream</span><span class="p">.</span><span class="nx">ValueSize</span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nx">Content</span><span class="p">:</span><span class="w"> </span><span class="nx">bytes</span><span class="p">.</span><span class="nx">NewBuffer</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">myFileName</span><span class="p">)),</span><span class="w"></span>
+<span class="w">            </span><span class="nx">Size</span><span class="p">:</span><span class="w">    </span><span class="nb">len</span><span class="p">(</span><span class="nx">myFileName</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="nx">Value</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">stream</span><span class="p">.</span><span class="nx">ValueSize</span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nx">Content</span><span class="p">:</span><span class="w"> </span><span class="nx">f</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nx">Size</span><span class="p">:</span><span class="w">    </span><span class="nb">int</span><span class="p">(</span><span class="nx">stats</span><span class="p">.</span><span class="nx">Size</span><span class="p">()),</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="nx">kvs</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[]</span><span class="o">*</span><span class="nx">stream</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="nx">kv1</span><span class="p">,</span><span class="w"> </span><span class="nx">kv2</span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">StreamSet</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">kvs</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="nx">entry</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">StreamGet</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyRequest</span><span class="p">{</span><span class="w"> </span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">myFileName</span><span class="p">)})</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;returned key %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">Key</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java
+Streams is not supported yet in this language SDK.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb4j/issues/new">Java sdk github project</a>
+:::</p>
+<p>::: tab Python
+Streams is not supported yet in this language SDK.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Node.js
+Streams is not supported yet in this language SDK.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab .Net
+Streams is not supported yet in this language SDK.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you’re using another development language, please refer to the <a class="reference internal" href="immugw.html"><span class="doc std std-doc">immugw</span></a> option.
+:::</p>
+<p>::::</p>
+<section id="chunked-reading">
+<h2>Chunked reading<a class="headerlink" href="#chunked-reading" title="Permalink to this heading">¶</a></h2>
+<p>It’s possible to read returned value chunk by chunk if needed. This grant to the clients capabilities to handle data coming from immudb  chunk by chunk</p>
+<p>:::: tabs</p>
+<p>::: tab Go
+To read chunk by chunk the inner gRPC protobuffer client is needed.
+Then it’s possible to use <code class="docutils literal notranslate"><span class="pre">kvStreamReceiver</span></code> to retrieve the key and a value reader. Such reader will fill provided byte array with received data and will return the number of read bytes or error.
+If no message is present it returns 0 and io.EOF. If the message is complete it returns 0 and nil, in that case successive calls to Read will returns a new message.</p>
+<blockquote>
+<div><p>There are several receivers available (zStreamReceiver, vEntryStreamReceiver, execAllStreamReceiver) and also a primitive receiver MsgReceiver. The last one can be used to receive a simple row []byte message without additional logics.</p>
+</div></blockquote>
+<div class="highlight-go notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="nx">sc</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">GetServiceClient</span><span class="p">()</span><span class="w"></span>
+<span class="w">	</span><span class="nx">gs</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sc</span><span class="p">.</span><span class="nx">StreamGet</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">KeyRequest</span><span class="p">{</span><span class="w"> </span><span class="nx">Key</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">myFileName</span><span class="p">)})</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">kvr</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">stream</span><span class="p">.</span><span class="nx">NewKvStreamReceiver</span><span class="p">(</span><span class="nx">stream</span><span class="p">.</span><span class="nx">NewMsgReceiver</span><span class="p">(</span><span class="nx">gs</span><span class="p">),</span><span class="w"> </span><span class="nx">stream</span><span class="p">.</span><span class="nx">DefaultChunkSize</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">vr</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">kvr</span><span class="p">.</span><span class="nx">Next</span><span class="p">()</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;read %s key&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">)</span><span class="w"></span>
+
+<span class="w">	</span><span class="nx">chunk</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">		</span><span class="nx">l</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">vr</span><span class="p">.</span><span class="nx">Read</span><span class="p">(</span><span class="nx">chunk</span><span class="p">)</span><span class="w"></span>
+<span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">EOF</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">			</span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"></span>
+<span class="w">		</span><span class="p">}</span><span class="w"></span>
+<span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">EOF</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">			</span><span class="k">break</span><span class="w"></span>
+<span class="w">		</span><span class="p">}</span><span class="w"></span>
+<span class="w">		</span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;read %d byte\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">l</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java
+Streams is not supported yet in this language SDK.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb4j/issues/new">Java sdk github project</a>
+:::</p>
+<p>::: tab Python
+Streams is not supported yet in this language SDK.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Node.js
+Streams is not supported yet in this language SDK.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab .Net
+Streams is not supported yet in this language SDK.
+Do you want to make a feature request or help out? Open an issue on <a class="reference external" href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you’re using another development language, please refer to the <a class="reference internal" href="immugw.html"><span class="doc std std-doc">immugw</span></a> option.
+:::</p>
+<p>::::</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Immudb</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Codenotary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/develop/streams.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

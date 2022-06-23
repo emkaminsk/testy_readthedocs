@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Use immuclient as Auditor &#8212; Immudb 1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="use-immuclient-as-auditor">
+<h1>Use immuclient as Auditor<a class="headerlink" href="#use-immuclient-as-auditor" title="Permalink to this heading">¶</a></h1>
+<WrappedSection>
+<p>The Auditor is a component for checking if immudb was tampered, it’s a good practice to run the auditor as a separate and independent component. immuclient can act as Auditor by running the following command:</p>
+<p>Start interactive:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient audit-mode
+1m0s
+immuclientd <span class="m">2022</span>/05/22 <span class="m">12</span>:34:11 INFO: starting auditor with a 1m0s interval ...
+immuclientd <span class="m">2022</span>/05/22 <span class="m">12</span>:34:11 INFO: auditor monitoring HTTP server starting on <span class="m">0</span>.0.0.0:9477 ...
+immuclientd <span class="m">2022</span>/05/22 <span class="m">12</span>:34:11 INFO: audit <span class="c1">#1 started @ 2022-05-22 12:34:11.543823286 +0200 CEST m=+0.153679785</span>
+immuclientd <span class="m">2022</span>/05/22 <span class="m">12</span>:34:11 INFO: audit <span class="c1">#1 - list of databases to audit has been (re)loaded - 2 database(s) found: [defaultdb mydatabase]</span>
+immuclientd <span class="m">2022</span>/05/22 <span class="m">12</span>:34:11 INFO: audit <span class="c1">#1 - auditing database defaultdb</span>
+immuclientd <span class="m">2022</span>/05/22 <span class="m">12</span>:34:11 INFO: audit <span class="c1">#1 finished in 55.295777ms @ 2022-05-22T12:34:11.599119184+02:00</span>
+</pre></div>
+</div>
+<p>immuclient is now running on the following address: 0.0.0.0:9477/metrics</p>
+<p>example output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># HELP immuclient_audit_curr_root_per_server Current root index used for the latest audit.</span>
+<span class="c1"># TYPE immuclient_audit_curr_root_per_server gauge</span>
+immuclient_audit_curr_root_per_server<span class="o">{</span><span class="nv">server_address</span><span class="o">=</span><span class="s2">&quot;127.0.0.1:3322&quot;</span>,server_id<span class="o">=</span><span class="s2">&quot;br8eugq036tfln0ct6o0&quot;</span><span class="o">}</span> <span class="m">2</span>
+<span class="c1"># HELP immuclient_audit_prev_root_per_server Previous root index used for the latest audit.</span>
+<span class="c1"># TYPE immuclient_audit_prev_root_per_server gauge</span>
+immuclient_audit_prev_root_per_server<span class="o">{</span><span class="nv">server_address</span><span class="o">=</span><span class="s2">&quot;127.0.0.1:3322&quot;</span>,server_id<span class="o">=</span><span class="s2">&quot;br8eugq036tfln0ct6o0&quot;</span><span class="o">}</span> -1
+<span class="c1"># HELP immuclient_audit_result_per_server Latest audit result (1 = ok, 0 = tampered).</span>
+<span class="c1"># TYPE immuclient_audit_result_per_server gauge</span>
+immuclient_audit_result_per_server<span class="o">{</span><span class="nv">server_address</span><span class="o">=</span><span class="s2">&quot;127.0.0.1:3322&quot;</span>,server_id<span class="o">=</span><span class="s2">&quot;br8eugq036tfln0ct6o0&quot;</span><span class="o">}</span> -1
+<span class="c1"># HELP immuclient_audit_run_at_per_server Timestamp in unix seconds at which latest audit run.</span>
+<span class="c1"># TYPE immuclient_audit_run_at_per_server gauge</span>
+immuclient_audit_run_at_per_server<span class="o">{</span><span class="nv">server_address</span><span class="o">=</span><span class="s2">&quot;127.0.0.1:3322&quot;</span>,server_id<span class="o">=</span><span class="s2">&quot;br8eugq036tfln0ct6o0&quot;</span><span class="o">}</span> <span class="m">1</span>.5907565337454605e+09
+</pre></div>
+</div>
+<p>immuclient looks for immudb at 127.0.0.1:3322 by default with the default username and password. Nevertheless a number of parameters can be defined:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>immuclient audit-mode            -  Run a foreground auditor
+immuclient audit-mode install    -  Install and runs daemon
+immuclient audit-mode stop       -  Stops the daemon
+immuclient audit-mode start      -  Starts initialized daemon
+immuclient audit-mode restart    -  Restarts daemon
+immuclient audit-mode uninstall  -  Removes daemon and its setup
+
+Flags:
+  -h, --help   help for audit-mode
+
+Global Flags:
+      --audit-databases string               Optional comma-separated list of databases (names) to be audited. Can be full name(s) or just name prefix(es).
+      --audit-monitoring-host string         Host for the monitoring HTTP server when running in audit mode (serves endpoints like metrics, health and version). (default &quot;0.0.0.0&quot;)
+      --audit-monitoring-port int            Port for the monitoring HTTP server when running in audit mode (serves endpoints like metrics, health and version). (default 9477)
+      --audit-notification-password string   Password used to authenticate when publishing audit result to &#39;audit-notification-url&#39;.
+      --audit-notification-url string        If set, auditor will send a POST request at this URL with audit result details.
+      --audit-notification-username string   Username used to authenticate when publishing audit result to &#39;audit-notification-url&#39;.
+      --audit-password string                immudb password used to login during audit; can be plain-text or base64 encoded (must be prefixed with &#39;enc:&#39; if it is encoded)
+      --audit-username string                immudb username used to login during audit
+      --certificate string                   server certificate file path (default &quot;./tools/mtls/4_client/certs/localhost.cert.pem&quot;)
+      --clientcas string                     clients certificates list. Aka certificate authority (default &quot;./tools/mtls/2_intermediate/certs/ca-chain.cert.pem&quot;)
+      --config string                        config file (default path are configs or $HOME. Default filename is immuclient.toml)
+      --database string                      immudb database to be used
+      --dir string                           Main directory for audit process tool to initialize (default &quot;/var/folders/0z/wk6v4sjd31qbvt7l75t_z_v00000gn/T/&quot;)
+  -a, --immudb-address string                immudb host address (default &quot;127.0.0.1&quot;)
+  -p, --immudb-port int                      immudb port number (default 3322)
+      --max-recv-msg-size int                max message size in bytes the client can receive (default 4194304)
+  -m, --mtls                                 enable mutual tls
+      --password string                      immudb password used to login; can be plain-text or base64 encoded (must be prefixed with &#39;enc:&#39; if it is encoded)
+      --pkey string                          server private key path (default &quot;./tools/mtls/4_client/private/localhost.key.pem&quot;)
+      --roots-filepath string                Filepath for storing root hashes after every successful audit loop. Default is tempdir of every OS. (default &quot;/tmp/&quot;)
+      --server-signing-pub-key string        Path to the public key to verify signatures when presents
+      --servername string                    used to verify the hostname on the returned certificates (default &quot;localhost&quot;)
+      --tokenfile string                     authentication token file (default path is $HOME or binary location; default filename is )
+      --username string                      immudb username used to login
+      --value-only                           returning only values for get operations
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+<section id="running-immuclient-auditor-as-a-service">
+<h2>Running immuclient Auditor as a service<a class="headerlink" href="#running-immuclient-auditor-as-a-service" title="Permalink to this heading">¶</a></h2>
+<p>immuclient as Auditor can be installed in the system with the following command:</p>
+<p>Install service:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>immuclient audit-mode install
+</pre></div>
+</div>
+<p>In this case, all parameters are written into the <code class="docutils literal notranslate"><span class="pre">immuclient</span></code> configuration file:</p>
+<ul class="simple">
+<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">/etc/immudb/immuclient.toml</span></code></p></li>
+<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">C:\ProgramData\ImmuClient\config\immuclient.toml</span></code></p></li>
+</ul>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="running-immuclient-auditor-with-docker">
+<h2>Running immuclient Auditor with docker<a class="headerlink" href="#running-immuclient-auditor-with-docker" title="Permalink to this heading">¶</a></h2>
+<p>We also provide a docker image starting immuclient as Auditor:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker pull codenotary/auditor
+</pre></div>
+</div>
+<p>Then it’s possible to run the command with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -it -e <span class="nv">IMMUCLIENT_IMMUDB_ADDRESS</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span> -e <span class="nv">IMMUCLIENT_AUDIT_USERNAME</span><span class="o">=</span><span class="s2">&quot;immudb&quot;</span> -e <span class="nv">IMMUCLIENT_AUDIT_PASSWORD</span><span class="o">=</span><span class="s2">&quot;immudb&quot;</span> codenotary/auditor
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="auditor-best-practices">
+<h2>Auditor best practices<a class="headerlink" href="#auditor-best-practices" title="Permalink to this heading">¶</a></h2>
+<section id="how-can-i-be-notified-if-my-immudb-instance-was-tampered">
+<h3>How can I be notified if my immudb instance was tampered?<a class="headerlink" href="#how-can-i-be-notified-if-my-immudb-instance-was-tampered" title="Permalink to this heading">¶</a></h3>
+<p>It’s possible to provide an external url that will be triggered in case a tamper is detected.
+By configuring <code class="docutils literal notranslate"><span class="pre">IMMUCLIENT_AUDIT_NOTIFICATION_URL</span></code>, a POST request will be sent with the following body:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;current_state&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;hash&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;public_key&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;tx&quot;</span><span class="p">:</span> <span class="mi">0</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;db&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;previous_state&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;hash&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;public_key&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;tx&quot;</span><span class="p">:</span> <span class="mi">0</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;run_at&quot;</span><span class="p">:</span> <span class="s2">&quot;2020-11-13T00:53:42+01:00&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;tampered&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+  <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>NOTE: it’s not possible to know at which transaction the database was tampered. The Auditor checks every second if the data was tampered - so it’s only possible to know at which time frame the tampering was detected.</p>
+</section>
+<section id="how-many-auditors-should-i-run-to-secure-my-immudb-instance">
+<h3>How many Auditors should I run to secure my immudb instance?<a class="headerlink" href="#how-many-auditors-should-i-run-to-secure-my-immudb-instance" title="Permalink to this heading">¶</a></h3>
+<p>A proper setup of one immuclient instance can fit most of cases, but there are ways to increase the security on detecting tampering. A single instance can go offline for any reason: network problems, hardware failures or attacks. Therefore a good practice can be to have multiple Auditor instances running in different zones.</p>
+</WrappedSection></section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Immudb</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Codenotary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/operations/auditor.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

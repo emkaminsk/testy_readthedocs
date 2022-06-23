@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Pgsql protocol compatibility &#8212; Immudb 1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="pgsql-protocol-compatibility">
+<h1>Pgsql protocol compatibility<a class="headerlink" href="#pgsql-protocol-compatibility" title="Permalink to this heading">¶</a></h1>
+<p>immudb can talk the <a class="reference external" href="https://www.postgresql.org/docs/9.3/protocol.html">pgsql wire protocol</a> which makes it compatible with a widely available set of clients and drivers.</p>
+<blockquote>
+<div><p>Note: immudb supports the pgsql wire protocol. It is <em>not</em> compatible with the SQL dialect. Check other topics in the <code class="docutils literal notranslate"><span class="pre">Develop</span> <span class="pre">with</span> <span class="pre">SQL</span></code> section to see what queries and operations are supported.</p>
+<p>Some pgsql clients and browser application execute incompatible statements in the background or directly query the pgsql catalog. Those may not work with immudb.</p>
+</div></blockquote>
+<p>immudb needs to be started with the <code class="docutils literal notranslate"><span class="pre">pgsql-server</span></code> option enabled (<code class="docutils literal notranslate"><span class="pre">IMMUDB_PGSQL_SERVER=true</span></code>).</p>
+<p>SSL is supported, if you configured immudb with a certificate.</p>
+<p>:::: tabs</p>
+<p>::: tab CLI
+Use the <a class="reference external" href="https://www.postgresql.org/docs/13/app-psql.html">psql client</a> included with PostgreSQL.
+:::</p>
+<p>::: tab C</p>
+<p>You can use a subset of the <a class="reference external" href="https://www.postgresql.org/docs/9.5/libpq.html">libpq</a> API. You will need to include:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;libpq-fe.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>and compile with <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">-o</span> <span class="pre">main</span> <span class="pre">$(pkg-config</span> <span class="pre">libpq</span> <span class="pre">--cflags</span> <span class="pre">--libs)</span> <span class="pre">main.c</span></code>.</p>
+<p>:::</p>
+<p>::: tab Ruby</p>
+<p>You can use the <a class="reference external" href="https://rubygems.org/gems/pg">pg</a> gem:</p>
+<div class="highlight-ruby notranslate"><div class="highlight"><pre><span></span><span class="nb">require</span> <span class="s1">&#39;pg&#39;</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java</p>
+<p>Download the official <a class="reference external" href="https://jdbc.postgresql.org/">JDBC driver</a> jar artifact for PostgreSQL.</p>
+<p>You can then compile your program:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ javac -cp .:./postgresql-42.2.20.jar MyProgram.java
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab PHP</p>
+<p>Please refer to the <a class="reference external" href="https://www.php.net/manual/en/book.pgsql.php">PHP pgsql module</a> documentation for instructions on how to enable it in your server.</p>
+<p>:::</p>
+<p>::::</p>
+<p>To connect to the database:</p>
+<p>:::: tabs</p>
+<p>::: tab CLI</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">psql</span> <span class="s2">&quot;host=localhost dbname=defaultdb user=immudb password=immudb sslmode=disable&quot;</span>
+<span class="n">psql</span> <span class="p">(</span><span class="mf">13.2</span><span class="p">,</span> <span class="n">server</span> <span class="mf">0.0.0</span><span class="p">)</span>
+<span class="n">Type</span> <span class="s2">&quot;help&quot;</span> <span class="k">for</span> <span class="n">help</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab C</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">PGconn</span><span class="w"> </span><span class="o">*</span><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PQconnectdb</span><span class="p">(</span><span class="s">&quot;host=localhost user=immudb password=immudb dbname=defaultdb sslmode=disable&quot;</span><span class="p">);</span><span class="w"></span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PQstatus</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">CONNECTION_BAD</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Connection to database failed: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">PQerrorMessage</span><span class="p">(</span><span class="n">conn</span><span class="p">));</span><span class="w"></span>
+<span class="w">  </span><span class="n">PQfinish</span><span class="p">(</span><span class="n">conn</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Ruby</p>
+<div class="highlight-ruby notranslate"><div class="highlight"><pre><span></span><span class="n">conn</span> <span class="o">=</span> <span class="no">PG</span><span class="o">::</span><span class="no">Connection</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;sslmode=allow dbname=defaultdb user=immudb password=immudb host=127.0.0.1 port=5432&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java</p>
+<p>It is important to pass the <code class="docutils literal notranslate"><span class="pre">preferQueryMode=simple</span></code> option, as immudb pgsql server only support simple query mode.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Connection</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>
+<span class="w">  </span><span class="n">DriverManager</span><span class="p">.</span><span class="na">getConnection</span><span class="p">(</span><span class="s">&quot;jdbc:postgresql://127.0.0.1:5432/defaultdb?sslmode=allow&amp;preferQueryMode=simple&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;immudb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;immudb&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Opened database successfully&quot;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab PHP</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="nv">$dbconn</span> <span class="o">=</span> <span class="nb">pg_connect</span><span class="p">(</span><span class="s2">&quot;host=localhost port=5432 sslmode=require user=immudb dbname=defaultdb password=immudb&quot;</span><span class="p">);</span>
+<span class="c1">//...</span>
+<span class="nb">pg_close</span><span class="p">(</span><span class="nv">$dbconn</span><span class="p">);</span>
+<span class="cp">?&gt;</span><span class="x"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::::</p>
+<p>Execute statements:</p>
+<p>:::: tabs</p>
+<p>::: tab CLI</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">defaultdb</span><span class="o">=&gt;</span> <span class="n">CREATE</span> <span class="n">TABLE</span> <span class="n">Orders</span><span class="p">(</span><span class="nb">id</span> <span class="n">INTEGER</span><span class="p">,</span> <span class="n">amount</span> <span class="n">INTEGER</span><span class="p">,</span> <span class="n">title</span> <span class="n">VARCHAR</span><span class="p">,</span> <span class="n">PRIMARY</span> <span class="n">KEY</span> <span class="nb">id</span><span class="p">);</span>
+<span class="n">SELECT</span> <span class="mi">1</span>
+<span class="n">defaultdb</span><span class="o">=&gt;</span> <span class="n">UPSERT</span> <span class="n">INTO</span> <span class="n">Orders</span> <span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span> <span class="n">VALUES</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="s1">&#39;title1&#39;</span><span class="p">);</span>
+<span class="n">SELECT</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab C</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">PGresult</span><span class="w"> </span><span class="o">*</span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PQexec</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CREATE TABLE Orders (id INTEGER, amount INTEGER, title VARCHAR, PRIMARY KEY id)&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PQresultStatus</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">PGRES_COMMAND_OK</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">do_exit</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span><span class="w"> </span><span class="n">res</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="n">PQclear</span><span class="p">(</span><span class="n">res</span><span class="p">);</span><span class="w"></span>
+
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PQexec</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;UPSERT INTO Orders (id, amount, title) VALUES (1, 200, &#39;title 1&#39;)&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PQresultStatus</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">PGRES_COMMAND_OK</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">do_exit</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span><span class="w"> </span><span class="n">res</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="n">PQclear</span><span class="p">(</span><span class="n">res</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Ruby</p>
+<div class="highlight-ruby notranslate"><div class="highlight"><pre><span></span><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span> <span class="s2">&quot;CREATE TABLE Orders (id INTEGER, amount INTEGER, title VARCHAR, PRIMARY KEY id)&quot;</span> <span class="p">)</span>
+<span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span> <span class="s2">&quot;UPSERT INTO Orders (id, amount, title) VALUES (1, 200, &#39;title 1&#39;)&quot;</span> <span class="p">)</span>
+<span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span> <span class="s2">&quot;UPSERT INTO Orders (id, amount, title) VALUES (2, 400, &#39;title 2&#39;)&quot;</span> <span class="p">)</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Statement</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="p">.</span><span class="na">createStatement</span><span class="p">();</span><span class="w"></span>
+
+<span class="n">stmt</span><span class="p">.</span><span class="na">executeUpdate</span><span class="p">(</span><span class="s">&quot;CREATE TABLE people(id INTEGER, name VARCHAR, salary INTEGER, PRIMARY KEY id);&quot;</span><span class="p">);</span><span class="w"></span>
+
+<span class="n">stmt</span><span class="p">.</span><span class="na">executeUpdate</span><span class="p">(</span><span class="s">&quot;INSERT INTO people(id, name, salary) VALUES (1, &#39;Joe&#39;, 20000);&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="n">stmt</span><span class="p">.</span><span class="na">executeUpdate</span><span class="p">(</span><span class="s">&quot;INSERT INTO people(id, name, salary) VALUES (2, &#39;Bob&#39;, 30000);&quot;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab PHP</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">$stmt = &#39;CREATE TABLE people(id INTEGER, name VARCHAR, salary INTEGER, PRIMARY KEY id);&#39;;</span>
+<span class="x">$result = pg_query($stmt) or die(&#39;Error message: &#39; . pg_last_error());</span>
+<span class="x">$stmt = &#39;INSERT INTO people(id, name, salary) VALUES (1, &#39;Joe&#39;, 20000);&#39;;</span>
+<span class="x">$result = pg_query($stmt) or die(&#39;Error message: &#39; . pg_last_error());</span>
+<span class="x">$stmt = &#39;INSERT INTO people(id, name, salary) VALUES (2, &#39;Bob&#39;, 30000);&#39;;</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::::</p>
+<p>Query and iterate over results:</p>
+<p>:::: tabs</p>
+<p>::: tab CLI</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">defaultdb</span><span class="o">=&gt;</span> <span class="n">SELECT</span> <span class="nb">id</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">title</span> <span class="n">FROM</span> <span class="n">Orders</span><span class="p">;</span>
+ <span class="p">(</span><span class="n">defaultdb</span><span class="o">.</span><span class="n">Orders</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">defaultdb</span><span class="o">.</span><span class="n">Orders</span><span class="o">.</span><span class="n">amount</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">defaultdb</span><span class="o">.</span><span class="n">Orders</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+<span class="o">-----------------------+---------------------------+--------------------------</span>
+                     <span class="mi">1</span> <span class="o">|</span>                       <span class="mi">200</span> <span class="o">|</span> <span class="s2">&quot;title1&quot;</span>
+<span class="p">(</span><span class="mi">1</span> <span class="n">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab C</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PQexec</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SELECT id, amount, title FROM Orders&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PQresultStatus</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">PGRES_TUPLES_OK</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;No data retrieved</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">PQclear</span><span class="p">(</span><span class="n">res</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">do_exit</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span><span class="w"> </span><span class="n">res</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PQntuples</span><span class="p">(</span><span class="n">res</span><span class="p">);</span><span class="w"></span>
+<span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">rows</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s %s %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">PQgetvalue</span><span class="p">(</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span><span class="w"></span>
+<span class="w">  </span><span class="n">PQgetvalue</span><span class="p">(</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">PQgetvalue</span><span class="p">(</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="n">PQclear</span><span class="p">(</span><span class="n">res</span><span class="p">);</span><span class="w"></span>
+<span class="n">PQfinish</span><span class="p">(</span><span class="n">conn</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Ruby</p>
+<div class="highlight-ruby notranslate"><div class="highlight"><pre><span></span><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span> <span class="s2">&quot;SELECT id, amount, title FROM Orders&quot;</span> <span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">result</span><span class="o">|</span>
+  <span class="n">result</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">row</span><span class="o">|</span>
+    <span class="nb">puts</span> <span class="n">row</span><span class="o">.</span><span class="n">inspect</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab Java</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">ResultSet</span><span class="w"> </span><span class="n">rs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stmt</span><span class="p">.</span><span class="na">executeQuery</span><span class="p">(</span><span class="s">&quot;SELECT * FROM people&quot;</span><span class="p">);</span><span class="w"></span>
+
+<span class="k">while</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="na">next</span><span class="p">()){</span><span class="w"></span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="s">&quot;ID: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rs</span><span class="p">.</span><span class="na">getInt</span><span class="p">(</span><span class="s">&quot;(defaultdb.people.id)&quot;</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="s">&quot;, Name: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rs</span><span class="p">.</span><span class="na">getString</span><span class="p">(</span><span class="s">&quot;(defaultdb.people.name)&quot;</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="s">&quot;, Salary: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rs</span><span class="p">.</span><span class="na">getInt</span><span class="p">(</span><span class="s">&quot;(defaultdb.people.salary)&quot;</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::: tab PHP</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">$query = &#39;SELECT * FROM people&#39;;</span>
+<span class="x">$result = pg_query($query) or die(&#39;Error message: &#39; . pg_last_error());</span>
+<span class="x">while ($row = pg_fetch_row($result)) {</span>
+<span class="x">  var_dump($row);  </span>
+<span class="x">}</span>
+</pre></div>
+</div>
+<p>:::</p>
+<p>::::</p>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Immudb</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Codenotary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/develop/sql/pg.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

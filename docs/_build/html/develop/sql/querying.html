@@ -1,0 +1,370 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Querying &#8212; Immudb 1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="querying">
+<h1>Querying<a class="headerlink" href="#querying" title="Permalink to this heading">¶</a></h1>
+<WrappedSection>
+<section id="selecting-all-columns">
+<h2>Selecting all columns<a class="headerlink" href="#selecting-all-columns" title="Permalink to this heading">¶</a></h2>
+<p>All columns from all joined tables can be queried with <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span></code> statement.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">products</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="selecting-specific-columns">
+<h2>Selecting specific columns<a class="headerlink" href="#selecting-specific-columns" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">customer_name</span><span class="p">,</span><span class="w"> </span><span class="n">ip</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="filtering-entries">
+<h2>Filtering entries<a class="headerlink" href="#filtering-entries" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">customer_name</span><span class="p">,</span><span class="w"> </span><span class="n">email</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">country</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;SE&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">city</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Arvika&#39;</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="ordering-by-column-value">
+<h2>Ordering by column value<a class="headerlink" href="#ordering-by-column-value" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">customer_name</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"></span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">customer_name</span><span class="w"> </span><span class="k">ASC</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Currently only one column can be used in the <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> clause.</p>
+<p>The order may be either ascending (<code class="docutils literal notranslate"><span class="pre">ASC</span></code> suffix, default) or descending (<code class="docutils literal notranslate"><span class="pre">DESC</span></code> suffix).</p>
+<p>Ordering rows by a value of a column requires a matching index on that column.</p>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="inner-join">
+<h2>INNER JOIN<a class="headerlink" href="#inner-join" title="Permalink to this heading">¶</a></h2>
+<p>immudb supports standard SQL <code class="docutils literal notranslate"><span class="pre">INNER</span> <span class="pre">JOIN</span></code> syntax.
+The <code class="docutils literal notranslate"><span class="pre">INNER</span></code> join type is optional.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">orders</span><span class="w"></span>
+<span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">customerid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">customers</span><span class="p">.</span><span class="n">id</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">orders</span><span class="w"></span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">customerid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">customers</span><span class="p">.</span><span class="n">id</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">productid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">orders</span><span class="w"></span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">customers</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">customerid</span><span class="w"></span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">products</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">products</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">productid</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="like-operator">
+<h2>LIKE operator<a class="headerlink" href="#like-operator" title="Permalink to this heading">¶</a></h2>
+<p>immudb supports the <code class="docutils literal notranslate"><span class="pre">LIKE</span></code> operator.
+Unlike in other SQL engines though, the pattern use a regexp syntax
+supported by the <a class="reference external" href="https://pkg.go.dev/regexp">regexp library in the go language</a>.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">NOT</span></code> prefix negates the value of the <code class="docutils literal notranslate"><span class="pre">LIKE</span></code> operator.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">product</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">products</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;(J.*ce|Red)&#39;</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="n">product</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">products</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;(J.*ce|Red)&#39;</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">product</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">products</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">products</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">products</span><span class="p">.</span><span class="n">product</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;J&#39;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="in-operator">
+<h2>IN operator<a class="headerlink" href="#in-operator" title="Permalink to this heading">¶</a></h2>
+<p>immudb has a basic supports for the <code class="docutils literal notranslate"><span class="pre">IN</span></code> operator.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">NOT</span></code> prefix negates the value of the <code class="docutils literal notranslate"><span class="pre">IN</span></code> operator.</p>
+<p>Note: Currently the list for the <code class="docutils literal notranslate"><span class="pre">IN</span></code> operator can not be
+calculated using a sub-query.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">product</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">products</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Milk&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Grapes - Red&#39;</span><span class="p">);</span><span class="w"></span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="n">product</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">products</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Milk&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Grapes - Red&#39;</span><span class="p">);</span><span class="w"></span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">product</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">products</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">products</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">product</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Milk&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Grapes - Red&#39;</span><span class="p">));</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="column-and-table-aliasing">
+<h2>Column and table aliasing<a class="headerlink" href="#column-and-table-aliasing" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">customer_name</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">active</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">c</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">customer_name</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">active</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="k">c</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Table name aliasing is necessary when using more than one join with the same table.</p>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="aggregations">
+<h2>Aggregations<a class="headerlink" href="#aggregations" title="Permalink to this heading">¶</a></h2>
+<p>Available aggregation functions:</p>
+<CustomList class="no-horizontal-padding" inverse size="small">
+<ul class="simple">
+<li><p>COUNT</p></li>
+<li><p>SUM</p></li>
+<li><p>MAX</p></li>
+<li><p>MIN</p></li>
+<li><p>AVG</p></li>
+</ul>
+</CustomList>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"></span>
+<span class="w">    </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">c</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="k">SUM</span><span class="p">(</span><span class="n">age</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="k">MIN</span><span class="p">(</span><span class="n">age</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="k">MAX</span><span class="p">(</span><span class="n">age</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="k">AVG</span><span class="p">(</span><span class="n">age</span><span class="p">)</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="grouping-results-with-group-by">
+<h2>Grouping results with GROUP BY<a class="headerlink" href="#grouping-results-with-group-by" title="Permalink to this heading">¶</a></h2>
+<p>Results can be grouped by a value of a single column.
+That column must also be used in a matching <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> clause.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">customer_count</span><span class="p">,</span><span class="w"> </span><span class="n">country</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"></span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">country</span><span class="w"></span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">country</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="filtering-grouped-results-with-having">
+<h2>Filtering grouped results with HAVING<a class="headerlink" href="#filtering-grouped-results-with-having" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"></span>
+<span class="w">    </span><span class="n">active</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="k">c</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="k">MIN</span><span class="p">(</span><span class="n">age</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="k">MAX</span><span class="p">(</span><span class="n">age</span><span class="p">)</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"></span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">active</span><span class="w"></span>
+<span class="k">HAVING</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="sub-queries">
+<h2>Sub-queries<a class="headerlink" href="#sub-queries" title="Permalink to this heading">¶</a></h2>
+<p>The table in the <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> or <code class="docutils literal notranslate"><span class="pre">JOIN</span></code> clauses can be replaced with a sub-query.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">customer_name</span><span class="w"></span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"></span>
+<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">30</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+<span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">customer_review</span><span class="w"></span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">customer_review</span><span class="p">.</span><span class="n">customerid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">customers</span><span class="p">.</span><span class="n">id</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">customer_name</span><span class="w"></span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"></span>
+<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">30</span><span class="w"></span>
+<span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">c</span><span class="w"></span>
+<span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">customer_review</span><span class="w"></span>
+<span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">r</span><span class="w"></span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">customerid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Note: the context of a sub-query does not propagate outside,
+e.g. it is not possible to reference a table from a sub-query
+in the <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clause outside of the sub-query.</p>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="combining-query-results-with-union">
+<h2>Combining query results with UNION<a class="headerlink" href="#combining-query-results-with-union" title="Permalink to this heading">¶</a></h2>
+<p>It is possible to combine multiple query results with the <code class="docutils literal notranslate"><span class="pre">UNION</span></code> operator.</p>
+<p>Subqueries must select the same number and type of columns.
+The final return will assign the same naming as in the first subquery, even if names differ.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">customer_name</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">name</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">30</span><span class="w"></span>
+<span class="k">UNION</span><span class="w"></span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">seller_name</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">sellers</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">30</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Subqueries are not constrained in any way, they can contain aggregations or joins.</p>
+<p>Duplicate rows are excluded by default. Using <code class="docutils literal notranslate"><span class="pre">UNION</span> <span class="pre">ALL</span></code> will leave duplicate rows in place.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="k">AVG</span><span class="p">(</span><span class="n">age</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">customers</span><span class="w"></span>
+<span class="k">UNION</span><span class="w"> </span><span class="k">ALL</span><span class="w"> </span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">AVG</span><span class="p">(</span><span class="n">age</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">sellers</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="transactions">
+<h2>Transactions<a class="headerlink" href="#transactions" title="Permalink to this heading">¶</a></h2>
+<p>The ACID (Atomicity, Consistency, Isolation, and Durability) compliance is complete.</p>
+<p>Handling read-write conflicts may be necessary when dealing with concurrent transactions. Getting the error <code class="docutils literal notranslate"><span class="pre">ErrTxReadConflict</span></code> (“tx read conflict”) means there was another transaction committed before the current one, and the data it read may have been invalidated.
+<a class="reference external" href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> validations have not yet been implemented, therefore there may be false positives generated. In case of conflict, a new attempt may be required.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">BEGIN</span><span class="w"> </span><span class="k">TRANSACTION</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">UPSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">products</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">price</span><span class="p">,</span><span class="w"> </span><span class="n">product</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$5.76&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Bread&#39;</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">orders</span><span class="p">(</span><span class="n">productid</span><span class="p">,</span><span class="w"> </span><span class="n">customerid</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">VALUES</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
+<span class="k">COMMIT</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="time-travel">
+<h2>Time travel<a class="headerlink" href="#time-travel" title="Permalink to this heading">¶</a></h2>
+<p>Time travel allows you to read data from SQL as if it were in a previous state or from a specific time range.
+Initial and final points are optional and can be specified using either a transaction ID or a timestamp.</p>
+<p>The temporal range can be used to filter out rows from the specified (physical) table, but it is not supported in subqueries.</p>
+<p>The initial point can be inclusive (<code class="docutils literal notranslate"><span class="pre">SINCE</span></code>) or exclusive (<code class="docutils literal notranslate"><span class="pre">AFTER</span></code>).
+The final point can be inclusive (<code class="docutils literal notranslate"><span class="pre">UNTIL</span></code>) or exclusive (<code class="docutils literal notranslate"><span class="pre">BEFORE</span></code>).</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">product</span><span class="p">,</span><span class="w"> </span><span class="n">price</span><span class="w"></span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">products</span><span class="w"> </span><span class="k">BEFORE</span><span class="w"> </span><span class="n">TX</span><span class="w"> </span><span class="mi">13</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="n">SINCE</span><span class="w"> </span><span class="s1">&#39;2022-01-06 11:38&#39;</span><span class="w"> </span><span class="k">UNTIL</span><span class="w"> </span><span class="s1">&#39;2022-01-06 12:00&#39;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Temporal ranges can be specified using functions and parameters</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">mytable</span><span class="w"> </span><span class="n">SINCE</span><span class="w"> </span><span class="n">TX</span><span class="w"> </span><span class="o">@</span><span class="n">initialTx</span><span class="w"> </span><span class="k">BEFORE</span><span class="w"> </span><span class="n">now</span><span class="p">()</span><span class="w"></span>
+</pre></div>
+</div>
+</WrappedSection></section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Immudb</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Codenotary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/develop/sql/querying.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

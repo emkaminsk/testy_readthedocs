@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Backwards compatibility &#8212; Immudb 1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="backwards-compatibility">
+<h1>Backwards compatibility<a class="headerlink" href="#backwards-compatibility" title="Permalink to this heading">¶</a></h1>
+<WrappedSection>
+<section id="immudb-1-1-proof-compatibility">
+<h2>immudb 1.1 proof compatibility<a class="headerlink" href="#immudb-1-1-proof-compatibility" title="Permalink to this heading">¶</a></h2>
+<p>immudb 1.2 introduced KV metadata to support new features such as logical deletion or data expiration.
+This change required updates to the way a transaction hash is calculated.
+The downside of such change is that immudb clients using immudb 1.2+
+needed an updated method of proof calculation in order to verify newly added data.</p>
+<p>In some cases it is very hard or impossible to update the verification code on the client side.
+If this is the case, immudb offers a way to disable metadata to maintain compatibility with older clients.</p>
+</WrappedSection>
+<WrappedSection>
+<section id="enabling-the-1-1-proof-compatibility-mode">
+<h3>Enabling the 1.1 proof compatibility mode<a class="headerlink" href="#enabling-the-1-1-proof-compatibility-mode" title="Permalink to this heading">¶</a></h3>
+<p><em>Note: backwards compatibility mode is currently not available for the <code class="docutils literal notranslate"><span class="pre">detaultdb</span></code> database.</em></p>
+<p>When creating new database, the mode can be specified with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuadmin database create &lt;db-name&gt; --write-tx-header-version <span class="m">0</span>
+</pre></div>
+</div>
+<p>Enabling compatibility mode for existing databases can be done by:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuadmin database update &lt;db-name&gt; --write-tx-header-version <span class="m">0</span>
+</pre></div>
+</div>
+<p><em>Note: immudb restart is needed to make this change effective.</em></p>
+<p>In order to re-enable metadata-enhanced proofs,
+update database settings with <code class="docutils literal notranslate"><span class="pre">--write-tx-header-version</span> <span class="pre">1</span></code> option.</p>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="limitations-of-1-1-compatibility-mode">
+<h3>Limitations of 1.1 compatibility mode<a class="headerlink" href="#limitations-of-1-1-compatibility-mode" title="Permalink to this heading">¶</a></h3>
+<p>Switching to 1.1-compatible proof mode will disable metadata support and thus will make the following operations unavailable:</p>
+<ul class="simple">
+<li><p>For KV interface:</p>
+<ul>
+<li><p>Logical deletion</p></li>
+<li><p>Data expiration</p></li>
+<li><p>Non-indexable entries</p></li>
+</ul>
+</li>
+<li><p>For SQL interface:</p>
+<ul>
+<li><p>Logical deletion</p></li>
+<li><p>Updates to indexed columns</p></li>
+</ul>
+</li>
+</ul>
+<p>Make sure to test your application before enabling the 1.1 compatibility mode.</p>
+</section>
+<section id="working-with-database-that-already-contains-metadata-enhanced-entries">
+<h3>Working with database that already contains metadata-enhanced entries<a class="headerlink" href="#working-with-database-that-already-contains-metadata-enhanced-entries" title="Permalink to this heading">¶</a></h3>
+<p>Even though old clients can not validate proofs for metadata-enhanced records,
+those can still read the data without proofs as long as those don’t use metadata.
+Operations such as <code class="docutils literal notranslate"><span class="pre">Get</span></code>, <code class="docutils literal notranslate"><span class="pre">Scan</span></code> or <code class="docutils literal notranslate"><span class="pre">History</span></code> will not cause errors in such workloads.</p>
+<p>If proofs are needed, KV entries that were previously added with metadata should
+be re-added to the database after enabling immudb 1.1 compatibility mode.</p>
+</WrappedSection>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Immudb</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Codenotary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/operations/backwards-compatibility.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

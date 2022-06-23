@@ -1,0 +1,400 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>CLI tools &#8212; Immudb 1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="cli-tools">
+<h1>CLI tools<a class="headerlink" href="#cli-tools" title="Permalink to this heading">¶</a></h1>
+<WrappedSection>
+<p>Before any operations can be run by immuadmin or immuclient, it is necessary to authenticate against the running immudb server.</p>
+<p>When immudb is first run, it is ready to use immediately with the default database and credentials:</p>
+<ul class="simple">
+<li><p>Database name: defaultdb</p></li>
+<li><p>User: immudb</p></li>
+<li><p>Password: immudb</p></li>
+<li><p>Address: 127.0.0.1</p></li>
+<li><p>Port: 3322</p></li>
+</ul>
+</WrappedSection>
+<WrappedSection>
+<section id="immuadmin">
+<h2>immuadmin<a class="headerlink" href="#immuadmin" title="Permalink to this heading">¶</a></h2>
+<p>immuadmin is the admin client for immudb. It is used for a variety of tasks such as creating and updating databases and users. Creating backups, restoring from backups etc.</p>
+<p>You may download the immuadmin binary from <a class="reference external" href="https://github.com/codenotary/immudb/releases/latest">the latest releases on Github</a>. Once you have downloaded immuadmin, rename it to <code class="docutils literal notranslate"><span class="pre">immuadmin</span></code>, make sure to mark it as executable, then run it. The following example shows how to obtain v1.3.0 for Linux amd64:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ wget https://github.com/vchain-us/immudb/releases/download/v1.3.0/immuadmin-v1.3.0-linux-amd64
+$ mv immuadmin-v1.3.0-linux-amd64 immuadmin
+$ chmod +x immuadmin
+</pre></div>
+</div>
+<p>Alternatively, you may <a class="reference external" href="https://hub.docker.com/r/codenotary/immuadmin">pull immuclient docker image from DockerHub</a> and run it in a ready-to-use container:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ docker run -it --rm --name immuadmin codenotary/immuadmin:latest status
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+<section id="basic-operations">
+<h3>Basic operations<a class="headerlink" href="#basic-operations" title="Permalink to this heading">¶</a></h3>
+<p>To get started we need to login to <code class="docutils literal notranslate"><span class="pre">immuadmin</span></code> first. The <code class="docutils literal notranslate"><span class="pre">admin</span></code> user is the similar to the <code class="docutils literal notranslate"><span class="pre">root</span></code> user in MySQL etc.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuadmin login immudb
+Password: immudb
+</pre></div>
+</div>
+<p>Once logged in we can create a new database using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuadmin database create mydatabase
+database <span class="s1">&#39;mydatabase&#39;</span> <span class="o">{</span>replica: false<span class="o">}</span> successfully created
+</pre></div>
+</div>
+<p>To switch to our newly created database</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient use mydatabase
+Now using mydatabase
+</pre></div>
+</div>
+<p>To create new user with read/write access to just created database</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuadmin user create user1 readwrite mydatabase
+Choose a password <span class="k">for</span> user1:
+Confirm password:
+</pre></div>
+</div>
+<p>For detailed description of immuadmin command arguments use help</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuadmin <span class="nb">help</span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+</section>
+<section id="immuclient">
+<h2>immuclient<a class="headerlink" href="#immuclient" title="Permalink to this heading">¶</a></h2>
+<p>immuclient is used for interacting with databases, like reading, writing and querying for data or invoking SQL.</p>
+<p>You may download the immuclient binary from <a class="reference external" href="https://github.com/codenotary/immudb/releases/latest">the latest releases on Github</a>. Once you have downloaded immuclient, rename it to <code class="docutils literal notranslate"><span class="pre">immuclient</span></code>, make sure to mark it as executable, then run it. The following example shows how to obtain v1.3.0 for Linux amd64:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ wget https://github.com/vchain-us/immudb/releases/download/v1.3.0/immuclient-v1.3.0-linux-amd64
+$ mv immuclient-v1.3.0-linux-amd64 immuclient
+$ chmod +x immuclient
+</pre></div>
+</div>
+<p>Alternatively, you may <a class="reference external" href="https://hub.docker.com/r/codenotary/immuclient">pull immuclient docker image from DockerHub</a> and run it in a ready-to-use container:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ docker run -it --rm --net host --name immuclient codenotary/immuclient:latest
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+<section id="id1">
+<h3>Basic operations<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>To display all available options and their description run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immudb <span class="nb">help</span>
+</pre></div>
+</div>
+<p>Running <code class="docutils literal notranslate"><span class="pre">login</span> <span class="pre">immudb</span></code> from within immuclient will use the default database name and port. All you need to supply is the user and password:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient login immudb
+Password: immudb
+</pre></div>
+</div>
+<p>While immudb supports <code class="docutils literal notranslate"><span class="pre">set</span></code> and <code class="docutils literal notranslate"><span class="pre">get</span></code> for key-value storing and retrieving, its immutability means that we can verify the integrity of the underlying Merkle tree. To do this, we use the <code class="docutils literal notranslate"><span class="pre">safeset</span></code> and <code class="docutils literal notranslate"><span class="pre">safeget</span></code> commands. Let’s try setting a value of <code class="docutils literal notranslate"><span class="pre">100</span></code> for the key <code class="docutils literal notranslate"><span class="pre">balance</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient safeset balance <span class="m">100</span>
+tx:             <span class="m">2</span>
+key:            balance
+value:          <span class="m">100</span>
+verified:       <span class="nb">true</span>
+</pre></div>
+</div>
+<p>Then, we can immediately overwrite the key <code class="docutils literal notranslate"><span class="pre">balance</span></code> with a value of <code class="docutils literal notranslate"><span class="pre">9001</span></code> instead:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient safeset balance <span class="m">9001</span>
+tx:             <span class="m">3</span>
+key:            balance
+value:          <span class="m">9001</span>
+verified:       <span class="nb">true</span>
+</pre></div>
+</div>
+<p>If we try to retrieve the current value of key <code class="docutils literal notranslate"><span class="pre">balance</span></code>, we should get <code class="docutils literal notranslate"><span class="pre">9001</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient safeget balance
+tx:             <span class="m">3</span>
+key:            balance
+value:          <span class="m">9001</span>
+verified:       <span class="nb">true</span> 
+</pre></div>
+</div>
+<p>Note that at each step so far, the <code class="docutils literal notranslate"><span class="pre">verified</span></code> flag is set to true. This ensures that the Merkle tree remains consistent for each transaction.</p>
+<p>We can show the history of transactions for key <code class="docutils literal notranslate"><span class="pre">balance</span></code> using the <code class="docutils literal notranslate"><span class="pre">history</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient <span class="nb">history</span> balance
+tx:             <span class="m">2</span>
+key:            balance
+value:          <span class="m">100</span>
+
+tx:             <span class="m">3</span>
+key:            balance
+value:          <span class="m">9001</span>
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="sql-operations">
+<h3>SQL operations<a class="headerlink" href="#sql-operations" title="Permalink to this heading">¶</a></h3>
+<p>In addition to a key-value store, immudb supports the relational model (SQL). For example, to create a table:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient <span class="nb">exec</span> <span class="s2">&quot;CREATE TABLE people(id INTEGER, name VARCHAR, salary INTEGER, PRIMARY KEY id);&quot;</span>
+Updated rows: <span class="m">0</span>
+</pre></div>
+</div>
+<p>To insert data, use <code class="docutils literal notranslate"><span class="pre">UPSERT</span></code> (insert or update), which will add an entry, or overwrite it if already exists (based on the primary key):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient <span class="nb">exec</span> <span class="s2">&quot;UPSERT INTO people(id, name, salary) VALUES (1, &#39;Joe&#39;, 10000);&quot;</span>
+Updated rows: <span class="m">1</span>
+$ ./immuclient <span class="nb">exec</span> <span class="s2">&quot;UPSERT INTO people(id, name, salary) VALUES (2, &#39;Bob&#39;, 30000);&quot;</span>
+Updated rows: <span class="m">1</span>
+</pre></div>
+</div>
+<p>To query the data you can use the traditional <code class="docutils literal notranslate"><span class="pre">SELECT</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient query <span class="s2">&quot;SELECT id, name, salary FROM people;&quot;</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE ID<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE NAME<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE SALARY<span class="o">)</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span>                      <span class="m">1</span> <span class="p">|</span> <span class="s2">&quot;Joe&quot;</span>                    <span class="p">|</span>                      <span class="m">10000</span> <span class="p">|</span>
+<span class="p">|</span>                      <span class="m">2</span> <span class="p">|</span> <span class="s2">&quot;Bob&quot;</span>                    <span class="p">|</span>                      <span class="m">30000</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
+</pre></div>
+</div>
+<p>If we upsert again on the primary key “1”, the value for “Joe” will be overwritten:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient <span class="nb">exec</span> <span class="s2">&quot;UPSERT INTO people(id, name, salary) VALUES (1, &#39;Joe&#39;, 20000);&quot;</span>
+Updated rows: <span class="m">1</span>
+
+$ ./immuclient query <span class="s2">&quot;SELECT id, name, salary FROM people;&quot;</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE ID<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE NAME<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE SALARY<span class="o">)</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span>                      <span class="m">1</span> <span class="p">|</span> <span class="s2">&quot;Joe&quot;</span>                    <span class="p">|</span>                      <span class="m">20000</span> <span class="p">|</span>
+<span class="p">|</span>                      <span class="m">2</span> <span class="p">|</span> <span class="s2">&quot;Bob&quot;</span>                    <span class="p">|</span>                      <span class="m">30000</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="time-travel">
+<h3>Time travel<a class="headerlink" href="#time-travel" title="Permalink to this heading">¶</a></h3>
+<p>immudb is a immutable database. History is always preserved. With immudb you can travel in time!</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient query <span class="s2">&quot;SELECT id, name, salary FROM people WHERE name=&#39;Joe&#39;;&quot;</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE ID<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE NAME<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE SALARY<span class="o">)</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span>                      <span class="m">1</span> <span class="p">|</span> <span class="s2">&quot;Joe&quot;</span>                    <span class="p">|</span>                      <span class="m">20000</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
+</pre></div>
+</div>
+<p>We can see the current transaction id using ‘current’:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient current
+database:       mydatabase
+txID:           <span class="m">5</span>
+hash:           2986dfeb2d15e55d8189f08c2508318addabe9e773e0b6e329cf23b654cc22e7
+</pre></div>
+</div>
+<p>This is the transaction id we will be using for the subsequent queries.</p>
+<p>Eg. before the update:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient query <span class="s2">&quot;SELECT id, name, salary FROM people BEFORE TX 5 WHERE name=&#39;Joe&#39;;&quot;</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE ID<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE NAME<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE SALARY<span class="o">)</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span>                      <span class="m">1</span> <span class="p">|</span> <span class="s2">&quot;Joe&quot;</span>                    <span class="p">|</span>                      <span class="m">10000</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
+</pre></div>
+</div>
+<p>or even before the first time insert (guess what, it is empty!):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient query <span class="s2">&quot;SELECT id, name, salary FROM people BEFORE TX 1 WHERE name=&#39;Joe&#39;;&quot;</span>
++------------------------+--------------------------+----------------------------+
+<span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE ID<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE NAME<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLE SALARY<span class="o">)</span> <span class="p">|</span>
++------------------------+--------------------------+----------------------------+
++------------------------+--------------------------+----------------------------+
+</pre></div>
+</div>
+<p>You can even <code class="docutils literal notranslate"><span class="pre">TABLE</span></code> a table with itself in the past. Imagine you want to see how people salary changed between two points in time:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient query <span class="s2">&quot;SELECT peoplenow.id, peoplenow.name, peoplethen.salary, peoplenow.salary FROM people BEFORE TX 5 AS peoplethen INNER JOIN people AS peoplenow ON peoplenow.id=peoplethen.id;&quot;</span>
++---------------------------+-----------------------------+--------------------------------+-------------------------------+
+<span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLENOW ID<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLENOW NAME<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLETHEN SALARY<span class="o">)</span> <span class="p">|</span> <span class="o">(</span>MYDATABASE PEOPLENOW SALARY<span class="o">)</span> <span class="p">|</span>
++---------------------------+-----------------------------+--------------------------------+-------------------------------+
+<span class="p">|</span>                         <span class="m">1</span> <span class="p">|</span> <span class="s2">&quot;Joe&quot;</span>                       <span class="p">|</span>                          <span class="m">10000</span> <span class="p">|</span>                         <span class="m">20000</span> <span class="p">|</span>
+<span class="p">|</span>                         <span class="m">2</span> <span class="p">|</span> <span class="s2">&quot;Bob&quot;</span>                       <span class="p">|</span>                          <span class="m">30000</span> <span class="p">|</span>                         <span class="m">30000</span> <span class="p">|</span>
++---------------------------+-----------------------------+--------------------------------+-------------------------------+
+</pre></div>
+</div>
+</WrappedSection>
+<WrappedSection>
+</section>
+<section id="kv-data-revisions">
+<h3>KV Data revisions<a class="headerlink" href="#kv-data-revisions" title="Permalink to this heading">¶</a></h3>
+<p>Whenever a new value is stored under given key, immudb saves a new revision of that data.
+Revision numbers start with 1 - the first value ever written to the database will have
+a revision number 1, the second will have 2 and so on.</p>
+<p>When reading a value from immudb, an explicit revision number can be specified.
+If the provided number is greater than 0, a value for given revision is retrieved.
+If the provided number is less than 0, the nth previous value is retrieved.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient <span class="nb">set</span> key value1
+tx:       <span class="m">2</span>
+rev:      <span class="m">1</span>
+key:      key
+value:    value1
+
+$ ./immuclient <span class="nb">set</span> key value2
+tx:       <span class="m">3</span>
+rev:      <span class="m">2</span>
+key:      key
+value:    value2
+
+$ ./immuclient <span class="nb">set</span> key value3
+tx:       <span class="m">4</span>
+rev:      <span class="m">3</span>
+key:      key
+value:    value3
+
+$ ./immuclient get key@1  <span class="c1"># Get the key at the first revision</span>
+tx:       <span class="m">2</span>
+rev:      <span class="m">1</span>
+key:      key
+value:    value1
+
+$ ./immuclient get key@-1  <span class="c1"># Get the key at the previous revision</span>
+tx:       <span class="m">3</span>
+rev:      <span class="m">2</span>
+key:      key
+value:    value2
+</pre></div>
+</div>
+<p>The immuclient tool has also the possibility to restore a previous revision for given key.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient restore key@-2
+tx:       <span class="m">5</span>
+rev:      <span class="m">4</span>
+key:      key
+value:    value1
+</pre></div>
+</div>
+</section>
+<section id="querying-for-keys-containing-revision-separator">
+<h3>Querying for keys containing revision separator<a class="headerlink" href="#querying-for-keys-containing-revision-separator" title="Permalink to this heading">¶</a></h3>
+<p>In some cases, the key can already contain the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> character reserved for key separator.
+In such case there are few options to read such key. The revision separator can be changed
+to any other string that is not part of the key. Also because immuclient will only scan
+the last occurrence of the revision separator, an explicit 0th revision can be set to read
+the current value behind such key.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./immuclient <span class="nb">set</span> some@email.address active
+tx:       <span class="m">2</span>
+rev:      <span class="m">1</span>
+key:      some@email.address
+value:    active
+
+<span class="c1"># Change the revision separator with environment variable</span>
+$ <span class="nv">IMMUCLIENT_REVISION_SEPARATOR</span><span class="o">=</span><span class="s2">&quot;###&quot;</span> ./immuclient get some@email.address
+tx:     <span class="m">2</span>
+key:    some@email.address
+value:  active
+hash:   138033b5a89438758fdb3481ba0dc44816d550749f799223587cb30cd7eadf5a
+
+<span class="c1"># Disable / change the revision separator through command-line argument</span>
+$ ./immuclient get --revision-separator<span class="o">=</span><span class="s2">&quot;&quot;</span> some@email.address
+tx:       <span class="m">2</span>
+rev:      <span class="m">1</span>
+key:      some@email.address
+value:    active
+
+<span class="c1"># Always use the revision number, use 0 for the current value</span>
+$ ./immuclient get some@email.address@0
+tx:       <span class="m">2</span>
+rev:      <span class="m">1</span>
+key:      some@email.address
+value:    active
+</pre></div>
+</div>
+</WrappedSection></section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Immudb</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Codenotary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/getstarted/clitools.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
