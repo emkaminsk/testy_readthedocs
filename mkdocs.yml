@@ -6,3 +6,9 @@ nav:
     - 'about.md'
     - 'concepts.md'
     - 'releasenotes.md'
+    - 'getstarted/build.md'
+    - 'getstarted/clitools.md'
+    - 'getstarted/jumpstart.md'
+    - 'getstarted/quickstart.md'
+    - 'getstarted/webconsole.md'
+
