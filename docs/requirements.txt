@@ -14,3 +14,4 @@ pyyaml-env-tag==0.1
 six==1.16.0 
 watchdog==2.1.9 
 zipp==3.8.0
+myst_parser==0.18.0
