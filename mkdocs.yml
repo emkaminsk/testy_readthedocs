@@ -1,4 +1,5 @@
-site_name: My Docs
+site_name: Immudb documentation
+site_url: https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/
 
 nav:
     - 'index.md'

@@ -1,227 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/about/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/concepts/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/releasenotes/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/additional/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/apis/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/connection/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/deleting/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/embedding/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/expiration/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/history/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/immugw/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/indexes/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/management/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/operations/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/reading/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/streams/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/transactions/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/catalog/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/datatypes/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/embeddingSQL/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/indexes/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/insertupdate/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/pg/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/querying/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/sqlstdlib/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/tablesalter/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/tablescreate/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/develop/sql/transactions/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/getstarted/build/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/getstarted/clitools/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/getstarted/jumpstart/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/getstarted/quickstart/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/getstarted/webconsole/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/operations/auditor/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/operations/backup/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/operations/backwards-compatibility/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/operations/monitoring/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/operations/planning/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/operations/replication/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/operations/service/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/operations/specs/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/reference/commands/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/reference/configuration/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>None</loc>
+         <loc>https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/reference/sdk/</loc>
          <lastmod>2022-06-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
