@@ -1,14 +1,14 @@
 site_name: Immudb documentation
-site_url: https://immudb-testowa-dokumentacja.readthedocs.io/en/latest/
-
+site_url: https://github.com/codenotary/immudb
 nav:
-    - 'index.md'
-    - 'about.md'
-    - 'concepts.md'
-    - 'releasenotes.md'
-    - 'getstarted/build.md'
-    - 'getstarted/clitools.md'
-    - 'getstarted/jumpstart.md'
-    - 'getstarted/quickstart.md'
-    - 'getstarted/webconsole.md'
+    - Home: index.md
+    - About Immudb: about.md
+    - Concepts: concepts.md
+    - Release notes: releasenotes.md
+    - Build: getstarted/build.md
+    - CLI Tools: getstarted/clitools.md
+    - Jumpstart: getstarted/jumpstart.md
+    - Quick Start: getstarted/quickstart.md
+    - Web console: getstarted/webconsole.md
 
+theme: readthedocs

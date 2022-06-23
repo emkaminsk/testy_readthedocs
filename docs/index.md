@@ -1,26 +1,62 @@
-# Welcome to MkDocs
-
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
-
-## Commands
-
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+# Welcome to Immudb
 
 ## Project layout
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        README.md        # Other markdown pages, images and other files.
-	    about.md
-	    concepts.md
-	    releasenotes.md
-	getstarted/
-		build.md
-		clitools.md
-		jumpstart.md
-		quickstart.md
-		webconsole.md
+ docs:
+about.md	 
+concepts.md	   
+index.md	 
+README.md  
+releasenotes.md  
+
+docs/develop:
+additional.md  
+apis.md	   
+connection.md  
+deleting.md  
+embedding.md
+expiration.md  
+history.md  
+immugw.md	  
+indexes.md   
+management.md
+operations.md  
+reading.md 	  
+streams.md   
+transactions.md
+
+docs/develop/sql:
+catalog.md	 
+datatypes.md  
+embeddingSQL.md	
+indexes.md	
+insertupdate.md
+pg.md		 
+querying.md   
+sqlstdlib.md	
+tablesalter.md	
+tablescreate.md
+transactions.md
+
+docs/getstarted:
+build.md  
+clitools.md  
+jumpstart.md  
+quickstart.md  
+webconsole.md
+
+docs/operations:
+auditor.md   
+backup.md	     
+backwards-compatibility.md  
+monitoring.md
+planning.md  
+replication.md  
+service.md			 
+specs.md
+
+docs/reference:
+commands.md  
+configuration.md  
+sdk.md
+
