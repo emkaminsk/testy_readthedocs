@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/getstarted/clitools/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>CLI Tools - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "CLI Tools";
+        var mkdocs_page_input_path = "getstarted/clitools.md";
+        var mkdocs_page_url = "/codenotary/immudb/getstarted/clitools/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../build/">Build</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">CLI Tools</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#immuadmin">immuadmin</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#basic-operations">Basic operations</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#immuclient">immuclient</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#basic-operations_1">Basic operations</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sql-operations">SQL operations</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#time-travel">Time travel</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#kv-data-revisions">KV Data revisions</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#querying-for-keys-containing-revision-separator">Querying for keys containing revision separator</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>CLI Tools</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="cli-tools">CLI tools</h1>
+<p><WrappedSection></p>
+<p>Before any operations can be run by immuadmin or immuclient, it is necessary to authenticate against the running immudb server.</p>
+<p>When immudb is first run, it is ready to use immediately with the default database and credentials:</p>
+<ul>
+<li>Database name: defaultdb</li>
+<li>User: immudb</li>
+<li>Password: immudb</li>
+<li>Address: 127.0.0.1</li>
+<li>Port: 3322</li>
+</ul>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h2 id="immuadmin">immuadmin</h2>
+<p>immuadmin is the admin client for immudb. It is used for a variety of tasks such as creating and updating databases and users. Creating backups, restoring from backups etc.</p>
+<p>You may download the immuadmin binary from <a href="https://github.com/codenotary/immudb/releases/latest">the latest releases on Github</a>. Once you have downloaded immuadmin, rename it to <code>immuadmin</code>, make sure to mark it as executable, then run it. The following example shows how to obtain v1.3.0 for Linux amd64:</p>
+<pre><code class="language-bash">$ wget https://github.com/vchain-us/immudb/releases/download/v1.3.0/immuadmin-v1.3.0-linux-amd64
+$ mv immuadmin-v1.3.0-linux-amd64 immuadmin
+$ chmod +x immuadmin
+</code></pre>
+<p>Alternatively, you may <a href="https://hub.docker.com/r/codenotary/immuadmin">pull immuclient docker image from DockerHub</a> and run it in a ready-to-use container:</p>
+<pre><code class="language-bash">$ docker run -it --rm --name immuadmin codenotary/immuadmin:latest status
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="basic-operations">Basic operations</h3>
+<p>To get started we need to login to <code>immuadmin</code> first. The <code>admin</code> user is the similar to the <code>root</code> user in MySQL etc.</p>
+<pre><code class="language-bash">$ ./immuadmin login immudb
+Password: immudb
+</code></pre>
+<p>Once logged in we can create a new database using</p>
+<pre><code class="language-bash">$ ./immuadmin database create mydatabase
+database 'mydatabase' {replica: false} successfully created
+</code></pre>
+<p>To switch to our newly created database</p>
+<pre><code class="language-bash">$ ./immuclient use mydatabase
+Now using mydatabase
+</code></pre>
+<p>To create new user with read/write access to just created database </p>
+<pre><code class="language-bash">$ ./immuadmin user create user1 readwrite mydatabase
+Choose a password for user1:
+Confirm password:
+</code></pre>
+<p>For detailed description of immuadmin command arguments use help</p>
+<pre><code class="language-bash">$ ./immuadmin help
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h2 id="immuclient">immuclient</h2>
+<p>immuclient is used for interacting with databases, like reading, writing and querying for data or invoking SQL. </p>
+<p>You may download the immuclient binary from <a href="https://github.com/codenotary/immudb/releases/latest">the latest releases on Github</a>. Once you have downloaded immuclient, rename it to <code>immuclient</code>, make sure to mark it as executable, then run it. The following example shows how to obtain v1.3.0 for Linux amd64:</p>
+<pre><code class="language-bash">$ wget https://github.com/vchain-us/immudb/releases/download/v1.3.0/immuclient-v1.3.0-linux-amd64
+$ mv immuclient-v1.3.0-linux-amd64 immuclient
+$ chmod +x immuclient
+</code></pre>
+<p>Alternatively, you may <a href="https://hub.docker.com/r/codenotary/immuclient">pull immuclient docker image from DockerHub</a> and run it in a ready-to-use container:</p>
+<pre><code class="language-bash">$ docker run -it --rm --net host --name immuclient codenotary/immuclient:latest
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="basic-operations_1">Basic operations</h3>
+<p>To display all available options and their description run:</p>
+<pre><code class="language-bash">$ ./immudb help
+</code></pre>
+<p>Running <code>login immudb</code> from within immuclient will use the default database name and port. All you need to supply is the user and password:</p>
+<pre><code class="language-bash">$ ./immuclient login immudb
+Password: immudb
+</code></pre>
+<p>While immudb supports <code>set</code> and <code>get</code> for key-value storing and retrieving, its immutability means that we can verify the integrity of the underlying Merkle tree. To do this, we use the <code>safeset</code> and <code>safeget</code> commands. Let's try setting a value of <code>100</code> for the key <code>balance</code>:</p>
+<pre><code class="language-bash">$ ./immuclient safeset balance 100
+tx:             2
+key:            balance
+value:          100
+verified:       true
+</code></pre>
+<p>Then, we can immediately overwrite the key <code>balance</code> with a value of <code>9001</code> instead:</p>
+<pre><code class="language-bash">$ ./immuclient safeset balance 9001
+tx:             3
+key:            balance
+value:          9001
+verified:       true
+</code></pre>
+<p>If we try to retrieve the current value of key <code>balance</code>, we should get <code>9001</code>:</p>
+<pre><code class="language-bash">$ ./immuclient safeget balance
+tx:             3
+key:            balance
+value:          9001
+verified:       true 
+</code></pre>
+<p>Note that at each step so far, the <code>verified</code> flag is set to true. This ensures that the Merkle tree remains consistent for each transaction.</p>
+<p>We can show the history of transactions for key <code>balance</code> using the <code>history</code> command:</p>
+<pre><code class="language-bash">$ ./immuclient history balance
+tx:             2
+key:            balance
+value:          100
+
+tx:             3
+key:            balance
+value:          9001
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="sql-operations">SQL operations</h3>
+<p>In addition to a key-value store, immudb supports the relational model (SQL). For example, to create a table:</p>
+<pre><code class="language-bash">$ ./immuclient exec &quot;CREATE TABLE people(id INTEGER, name VARCHAR, salary INTEGER, PRIMARY KEY id);&quot;
+Updated rows: 0
+</code></pre>
+<p>To insert data, use <code>UPSERT</code> (insert or update), which will add an entry, or overwrite it if already exists (based on the primary key):</p>
+<pre><code class="language-bash">$ ./immuclient exec &quot;UPSERT INTO people(id, name, salary) VALUES (1, 'Joe', 10000);&quot;
+Updated rows: 1
+$ ./immuclient exec &quot;UPSERT INTO people(id, name, salary) VALUES (2, 'Bob', 30000);&quot;
+Updated rows: 1
+</code></pre>
+<p>To query the data you can use the traditional <code>SELECT</code>:</p>
+<pre><code class="language-bash">$ ./immuclient query &quot;SELECT id, name, salary FROM people;&quot;
++------------------------+--------------------------+----------------------------+
+| (MYDATABASE PEOPLE ID) | (MYDATABASE PEOPLE NAME) | (MYDATABASE PEOPLE SALARY) |
++------------------------+--------------------------+----------------------------+
+|                      1 | &quot;Joe&quot;                    |                      10000 |
+|                      2 | &quot;Bob&quot;                    |                      30000 |
++------------------------+--------------------------+----------------------------+
+</code></pre>
+<p>If we upsert again on the primary key "1", the value for "Joe" will be overwritten:</p>
+<pre><code class="language-bash">$ ./immuclient exec &quot;UPSERT INTO people(id, name, salary) VALUES (1, 'Joe', 20000);&quot;
+Updated rows: 1
+
+$ ./immuclient query &quot;SELECT id, name, salary FROM people;&quot;
++------------------------+--------------------------+----------------------------+
+| (MYDATABASE PEOPLE ID) | (MYDATABASE PEOPLE NAME) | (MYDATABASE PEOPLE SALARY) |
++------------------------+--------------------------+----------------------------+
+|                      1 | &quot;Joe&quot;                    |                      20000 |
+|                      2 | &quot;Bob&quot;                    |                      30000 |
++------------------------+--------------------------+----------------------------+
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="time-travel">Time travel</h3>
+<p>immudb is a immutable database. History is always preserved. With immudb you can travel in time!</p>
+<pre><code class="language-bash">$ ./immuclient query &quot;SELECT id, name, salary FROM people WHERE name='Joe';&quot;
++------------------------+--------------------------+----------------------------+
+| (MYDATABASE PEOPLE ID) | (MYDATABASE PEOPLE NAME) | (MYDATABASE PEOPLE SALARY) |
++------------------------+--------------------------+----------------------------+
+|                      1 | &quot;Joe&quot;                    |                      20000 |
++------------------------+--------------------------+----------------------------+
+</code></pre>
+<p>We can see the current transaction id using 'current':</p>
+<pre><code class="language-bash">$ ./immuclient current
+database:       mydatabase
+txID:           5
+hash:           2986dfeb2d15e55d8189f08c2508318addabe9e773e0b6e329cf23b654cc22e7
+</code></pre>
+<p>This is the transaction id we will be using for the subsequent queries.</p>
+<p>Eg. before the update:</p>
+<pre><code class="language-bash">$ ./immuclient query &quot;SELECT id, name, salary FROM people BEFORE TX 5 WHERE name='Joe';&quot;
++------------------------+--------------------------+----------------------------+
+| (MYDATABASE PEOPLE ID) | (MYDATABASE PEOPLE NAME) | (MYDATABASE PEOPLE SALARY) |
++------------------------+--------------------------+----------------------------+
+|                      1 | &quot;Joe&quot;                    |                      10000 |
++------------------------+--------------------------+----------------------------+
+</code></pre>
+<p>or even before the first time insert (guess what, it is empty!):</p>
+<pre><code class="language-bash">$ ./immuclient query &quot;SELECT id, name, salary FROM people BEFORE TX 1 WHERE name='Joe';&quot;
++------------------------+--------------------------+----------------------------+
+| (MYDATABASE PEOPLE ID) | (MYDATABASE PEOPLE NAME) | (MYDATABASE PEOPLE SALARY) |
++------------------------+--------------------------+----------------------------+
++------------------------+--------------------------+----------------------------+
+</code></pre>
+<p>You can even <code>TABLE</code> a table with itself in the past. Imagine you want to see how people salary changed between two points in time:</p>
+<pre><code class="language-bash">$ ./immuclient query &quot;SELECT peoplenow.id, peoplenow.name, peoplethen.salary, peoplenow.salary FROM people BEFORE TX 5 AS peoplethen INNER JOIN people AS peoplenow ON peoplenow.id=peoplethen.id;&quot;
++---------------------------+-----------------------------+--------------------------------+-------------------------------+
+| (MYDATABASE PEOPLENOW ID) | (MYDATABASE PEOPLENOW NAME) | (MYDATABASE PEOPLETHEN SALARY) | (MYDATABASE PEOPLENOW SALARY) |
++---------------------------+-----------------------------+--------------------------------+-------------------------------+
+|                         1 | &quot;Joe&quot;                       |                          10000 |                         20000 |
+|                         2 | &quot;Bob&quot;                       |                          30000 |                         30000 |
++---------------------------+-----------------------------+--------------------------------+-------------------------------+
+</code></pre>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="kv-data-revisions">KV Data revisions</h3>
+<p>Whenever a new value is stored under given key, immudb saves a new revision of that data.
+Revision numbers start with 1 - the first value ever written to the database will have
+a revision number 1, the second will have 2 and so on.</p>
+<p>When reading a value from immudb, an explicit revision number can be specified.
+If the provided number is greater than 0, a value for given revision is retrieved.
+If the provided number is less than 0, the nth previous value is retrieved.</p>
+<pre><code class="language-bash">$ ./immuclient set key value1
+tx:       2
+rev:      1
+key:      key
+value:    value1
+
+$ ./immuclient set key value2
+tx:       3
+rev:      2
+key:      key
+value:    value2
+
+$ ./immuclient set key value3
+tx:       4
+rev:      3
+key:      key
+value:    value3
+
+$ ./immuclient get key@1  # Get the key at the first revision
+tx:       2
+rev:      1
+key:      key
+value:    value1
+
+$ ./immuclient get key@-1  # Get the key at the previous revision
+tx:       3
+rev:      2
+key:      key
+value:    value2
+</code></pre>
+<p>The immuclient tool has also the possibility to restore a previous revision for given key.</p>
+<pre><code class="language-bash">$ ./immuclient restore key@-2
+tx:       5
+rev:      4
+key:      key
+value:    value1
+</code></pre>
+<h3 id="querying-for-keys-containing-revision-separator">Querying for keys containing revision separator</h3>
+<p>In some cases, the key can already contain the <code>@</code> character reserved for key separator.
+In such case there are few options to read such key. The revision separator can be changed
+to any other string that is not part of the key. Also because immuclient will only scan
+the last occurrence of the revision separator, an explicit 0th revision can be set to read
+the current value behind such key.</p>
+<pre><code class="language-bash">$ ./immuclient set some@email.address active
+tx:       2
+rev:      1
+key:      some@email.address
+value:    active
+
+# Change the revision separator with environment variable
+$ IMMUCLIENT_REVISION_SEPARATOR=&quot;###&quot; ./immuclient get some@email.address
+tx:     2
+key:    some@email.address
+value:  active
+hash:   138033b5a89438758fdb3481ba0dc44816d550749f799223587cb30cd7eadf5a
+
+# Disable / change the revision separator through command-line argument
+$ ./immuclient get --revision-separator=&quot;&quot; some@email.address
+tx:       2
+rev:      1
+key:      some@email.address
+value:    active
+
+# Always use the revision number, use 0 for the current value
+$ ./immuclient get some@email.address@0
+tx:       2
+rev:      1
+key:      some@email.address
+value:    active
+</code></pre>
+<p></WrappedSection></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../build/" class="btn btn-neutral float-left" title="Build"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../jumpstart/" class="btn btn-neutral float-right" title="Jumpstart">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../build/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../jumpstart/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

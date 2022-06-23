@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/reference/commands/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Command reference - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Command reference";
+        var mkdocs_page_input_path = "reference/commands.md";
+        var mkdocs_page_url = "/codenotary/immudb/reference/commands/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Command reference</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="command-reference">Command reference</h1>
+<h2 id="immudb">immudb</h2>
+<p>Simply run <code>./immudb -d</code> to start immudb locally in the background.</p>
+<p>If you want to stop immudb în that case you need to find the process <code>ps -ax | grep immudb</code> and then <code>kill -15 &lt;pid&gt;</code>. Windows PowerShell would be <code>Get-Process immudb* | Stop-Process</code>.</p>
+<pre><code class="language-bash">immudb - the lightweight, high-speed immutable database for systems and applications.
+
+Environment variables:
+  IMMUDB_DIR=.
+  IMMUDB_NETWORK=tcp
+  IMMUDB_ADDRESS=0.0.0.0
+  IMMUDB_PORT=3322
+  IMMUDB_DBNAME=immudb
+  IMMUDB_PIDFILE=
+  IMMUDB_LOGFILE=
+  IMMUDB_MTLS=false
+  IMMUDB_AUTH=true
+  IMMUDB_DETACHED=false
+  IMMUDB_CONSISTENCY_CHECK=true
+  IMMUDB_PKEY=./tools/mtls/3_application/private/localhost.key.pem
+  IMMUDB_CERTIFICATE=./tools/mtls/3_application/certs/localhost.cert.pem
+  IMMUDB_CLIENTCAS=./tools/mtls/2_intermediate/certs/ca-chain.cert.pem
+  IMMUDB_DEVMODE=true
+  IMMUDB_MAINTENANCE=false
+  IMMUDB_ADMIN_PASSWORD=immudb
+
+Usage:
+  immudb [flags]
+  immudb [command]
+
+Available Commands:
+  help        Help about any command
+  version     Show the immudb version
+
+Flags:
+  -a, --address string          bind address (default &quot;0.0.0.0&quot;)
+      --admin-password string   admin password (default is 'immu') as plain-text or base64 encoded (must be prefixed with 'enc:' if it is encoded) (default &quot;immudb&quot;)
+  -s, --auth                    enable auth
+      --certificate string      server certificate file path (default &quot;./tools/mtls/3_application/certs/localhost.cert.pem&quot;)
+      --clientcas string        clients certificates list. Aka certificate authority (default &quot;./tools/mtls/2_intermediate/certs/ca-chain.cert.pem&quot;)
+      --config string           config file (default path are configs or $HOME. Default filename is immudb.ini)
+      --consistency-check       enable consistency check monitor routine. To disable: --consistency-check=false (default true)
+  -d, --detached                run immudb in background
+      --devmode                 enable dev mode: accept remote connections without auth
+      --dir string              data folder (default &quot;./data&quot;)
+  -h, --help                    help for immudb
+      --logfile string          log path with filename. E.g. /tmp/immudb/immudb.log
+      --maintenance             override the authentication flag
+  -m, --mtls                    enable mutual tls
+      --no-histograms           disable collection of histogram metrics like query durations
+      --pidfile string          pid path with filename. E.g. /var/run/immudb.pid
+      --pkey string             server private key path (default &quot;./tools/mtls/3_application/private/localhost.key.pem&quot;)
+  -p, --port int                port number (default 3322)
+
+Use &quot;immudb [command] --help&quot; for more information about a command.
+</code></pre>
+<h2 id="immugw">immugw</h2>
+<p>immugw can be found in a different <a href="https://github.com/codenotary/immugw">repository</a></p>
+<p>Simply run <code>./immugw -d</code> to start immugw on the same machine as immudb (test or dev environment) or point to the remote immudb system <code>./immugw --immudbaddress "immudb-server"</code>.</p>
+<p>If you want to stop immugw în that case you need to find the process <code>ps -ax | grep immugw</code> and then <code>kill -15 &lt;pid&gt;</code>. Windows PowerShell would be <code>Get-Process immugw* | Stop-Process</code>.</p>
+<pre><code class="language-bash">immu gateway: a smart REST proxy for immudb - the lightweight, high-speed immutable database for systems and applications.
+It exposes all gRPC methods with a REST interface while wrapping all SAFE endpoints with a verification service.
+
+Environment variables:
+  IMMUGW_ADDRESS=0.0.0.0
+  IMMUGW_PORT=3323
+  IMMUGW_IMMUDB_ADDRESS=127.0.0.1
+  IMMUGW_IMMUDB_PORT=3322
+  IMMUGW_DIR=.
+  IMMUGW_PIDFILE=
+  IMMUGW_LOGFILE=
+  IMMUGW_DETACHED=false
+  IMMUGW_MTLS=false
+  IMMUGW_SERVERNAME=localhost
+  IMMUGW_PKEY=./tools/mtls/4_client/private/localhost.key.pem
+  IMMUGW_CERTIFICATE=./tools/mtls/4_client/certs/localhost.cert.pem
+  IMMUGW_CLIENTCAS=./tools/mtls/2_intermediate/certs/ca-chain.cert.pem
+
+Usage:
+  immugw [flags]
+  immugw [command]
+
+Available Commands:
+  help        Help about any command
+  version     Show the immugw version
+
+Flags:
+  -a, --address string            immugw host address (default &quot;0.0.0.0&quot;)
+      --audit                     enable audit mode (continuously fetches latest root from server, checks consistency against a local root and saves the latest root locally)
+      --audit-interval duration   interval at which audit should run (default 5m0s)
+      --audit-password string     immudb password used to login during audit; can be plain-text or base64 encoded (must be prefixed with 'enc:' if it is encoded)
+      --audit-username string     immudb username used to login during audit (default &quot;immugwauditor&quot;)
+      --certificate string        server certificate file path (default &quot;./tools/mtls/4_client/certs/localhost.cert.pem&quot;)
+      --clientcas string          clients certificates list. Aka certificate authority (default &quot;./tools/mtls/2_intermediate/certs/ca-chain.cert.pem&quot;)
+      --config string             config file (default path are configs or $HOME. Default filename is immugw.toml)
+  -d, --detached                  run immudb in background
+      --dir string                program files folder (default &quot;.&quot;)
+  -h, --help                      help for immugw
+  -k, --immudb-address string     immudb host address (default &quot;127.0.0.1&quot;)
+  -j, --immudb-port int           immudb port number (default 3322)
+      --logfile string            log path with filename. E.g. /tmp/immugw/immugw.log
+  -m, --mtls                      enable mutual tls
+      --pidfile string            pid path with filename. E.g. /var/run/immugw.pid
+      --pkey string               server private key path (default &quot;./tools/mtls/4_client/private/localhost.key.pem&quot;)
+  -p, --port int                  immugw port number (default 3323)
+      --servername string         used to verify the hostname on the returned certificates (default &quot;localhost&quot;)
+
+Use &quot;immugw [command] --help&quot; for more information about a command.
+</code></pre>
+<h2 id="immuadmin">immuadmin</h2>
+<p>For security reasons we recommend using immuadmin only on the same system as immudb. User management is restricted to localhost usage. Simply run <code>./immuadmin</code> on the same machine.</p>
+<pre><code class="language-bash">CLI admin client for immudb - the lightweight, high-speed immutable database for systems and applications.
+
+Environment variables:
+  IMMUADMIN_IMMUDB_ADDRESS=127.0.0.1
+  IMMUADMIN_IMMUDB_PORT=3322
+  IMMUADMIN_MTLS=true
+  IMMUADMIN_SERVERNAME=localhost
+  IMMUADMIN_PKEY=./tools/mtls/4_client/private/localhost.key.pem
+  IMMUADMIN_CERTIFICATE=./tools/mtls/4_client/certs/localhost.cert.pem
+  IMMUADMIN_CLIENTCAS=./tools/mtls/2_intermediate/certs/ca-chain.cert.pem
+
+Usage:
+  immuadmin [command]
+
+Available Commands:
+  backup      Make a copy of the database files and folders
+  database    Issue all database commands
+  dump        Dump database content to a file
+  help        Help about any command
+  login       Login using the specified username and password (admin username is immudb)
+  logout
+  print       Print merkle tree
+  restore     Restore the database from a snapshot archive or folder
+  service     Manage immu services
+  set         Update server config items: auth (none|password|cryptosig), mtls (true|false)
+  stats       Show statistics as text or visually with the '-v' option. Run 'immuadmin stats -h' for details.
+  status      Show heartbeat status
+  user        Issue all user commands
+  version     Show the immuadmin version
+
+Flags:
+      --certificate string      server certificate file path (default &quot;./tools/mtls/4_client/certs/localhost.cert.pem&quot;)
+      --clientcas string        clients certificates list. Aka certificate authority (default &quot;./tools/mtls/2_intermediate/certs/ca-chain.cert.pem&quot;)
+      --config string           config file (default path is configs or $HOME; default filename is immuadmin.toml)
+  -h, --help                    help for immuadmin
+  -a, --immudb-address string   immudb host address (default &quot;127.0.0.1&quot;)
+  -p, --immudb-port int         immudb port number (default 3322)
+  -m, --mtls                    enable mutual tls
+      --pkey string             server private key path (default &quot;./tools/mtls/4_client/private/localhost.key.pem&quot;)
+      --servername string       used to verify the hostname on the returned certificates (default &quot;localhost&quot;)
+      --tokenfile string        authentication token file (default path is $HOME or binary location; the supplied value will be automatically suffixed with _admin; default filename is token-0.7.0_admin) (default &quot;token-0.7.0&quot;)
+
+Use &quot;immuadmin [command] --help&quot; for more information about a command.
+</code></pre>
+<h2 id="immuclient">immuclient</h2>
+<p>Simply run <code>./immuclient</code> on the same machine or connect to a remote immudb <code>./immuclient -a &lt;immudb-host&gt;</code></p>
+<pre><code class="language-bash">CLI client for immudb - the lightweight, high-speed immutable database for systems and applications.
+Environment variables:
+  IMMUCLIENT_IMMUDB_ADDRESS=127.0.0.1
+  IMMUCLIENT_IMMUDB_PORT=3322
+  IMMUCLIENT_AUTH=true
+  IMMUCLIENT_MTLS=false
+  IMMUCLIENT_SERVERNAME=localhost
+  IMMUCLIENT_PKEY=./tools/mtls/4_client/private/localhost.key.pem
+  IMMUCLIENT_CERTIFICATE=./tools/mtls/4_client/certs/localhost.cert.pem
+  IMMUCLIENT_CLIENTCAS=./tools/mtls/2_intermediate/certs/ca-chain.cert.pem
+
+IMPORTANT: All get and safeget functions return base64-encoded keys and values, while all set and safeset functions expect base64-encoded inputs.
+
+Usage:
+  immuclient [flags]
+  immuclient [command]
+
+Available Commands:
+  audit-mode        Starts immuclient as daemon in auditor mode. Run 'immuclient audit-mode help' or use -h flag for details
+  check-consistency Check consistency for the specified index and hash
+  count             Count keys having the specified prefix
+  current           Return the last merkle tree root and index stored locally
+  get               Get item having the specified key
+  getByIndex        Return an element by index
+  getRawBySafeIndex Return an element by index
+  help              Help about any command
+  history           Fetch history for the item having the specified key
+  inclusion         Check if specified index is included in the current tree
+  iscan             Iterate over all elements by insertion order
+  it                Starts immuclient in CLI mode. Use 'help' or -h flag on the shell for details
+  login             Login using the specified username and password
+  logout
+  rawsafeget        Get item having the specified key, without parsing structured values
+  rawsafeset        Set a value for the item having the specified key, without setup structured values
+  reference         Add new reference to an existing key
+  safeget           Get and verify item having the specified key
+  safereference     Add and verify new reference to an existing key
+  safeset           Add and verify new item having the specified key and value
+  safezadd          Add and verify new key with score to a new or existing sorted set
+  scan              Iterate over keys having the specified prefix
+  set               Add new item having the specified key and value
+  status            Ping to check if server connection is alive
+  use               Select database
+  user              Issue all user commands
+  version           Show the immuclient version
+  zadd              Add new key with score to a new or existing sorted set
+  zscan             Iterate over a sorted set
+
+Flags:
+      --audit-password string    immudb password used to login during audit; can be plain-text or base64 encoded (must be prefixed with 'enc:' if it is encoded)
+      --audit-username string    immudb username used to login during audit
+      --certificate string       server certificate file path (default &quot;./tools/mtls/4_client/certs/localhost.cert.pem&quot;)
+      --clientcas string         clients certificates list. Aka certificate authority (default &quot;./tools/mtls/2_intermediate/certs/ca-chain.cert.pem&quot;)
+      --config string            config file (default path are configs or $HOME. Default filename is immuclient.toml)
+      --dir string               Main directory for audit process tool to initialize (default &quot;/tmp&quot;)
+  -h, --help                     help for immuclient
+  -a, --immudb-address string    immudb host address (default &quot;127.0.0.1&quot;)
+  -p, --immudb-port int          immudb port number (default 3322)
+  -m, --mtls                     enable mutual tls
+      --pkey string              server private key path (default &quot;./tools/mtls/4_client/private/localhost.key.pem&quot;)
+      --prometheus-host string   Launch host of the Prometheus exporter. (default &quot;0.0.0.0&quot;)
+      --prometheus-port string   Launch port of the Prometheus exporter. (default &quot;9477&quot;)
+      --roots-filepath string    Filepath for storing root hashes after every successful audit loop. Default is tempdir of every OS. (default &quot;/tmp/&quot;)
+      --servername string        used to verify the hostname on the returned certificates (default &quot;localhost&quot;)
+      --tokenfile string         authentication token file (default path is $HOME or binary location; default filename is token-0.7.0) (default &quot;token-0.7.0&quot;)
+      --value-only               returning only values for get operations
+
+Use &quot;immuclient [command] --help&quot; for more information about a command.
+
+</code></pre>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

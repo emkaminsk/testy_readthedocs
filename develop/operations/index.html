@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/develop/operations/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>State management - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "State management";
+        var mkdocs_page_input_path = "develop/operations.md";
+        var mkdocs_page_url = "/codenotary/immudb/develop/operations/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>State management</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="state-management">State management</h1>
+<h2 id="current-state">Current State</h2>
+<p>Current state of immudb provides proof that clients can use to verify immudb:</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">state, err := client.CurrentState(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf(&quot;current state is : %v&quot;, state)
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+
+    state = client.currentState()   # immudb.rootService.State
+    print(state.db)         # Current selected DB
+    print(state.txId)       # Current transaction ID
+    print(state.txHash)     # Current transaction hash
+    print(state.signature)  # Current signature
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">ImmuState currState = immuClient.currentState();
+
+System.out.printf(&quot;The current state is &quot; + currState.toString());
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    const currentStateRes = await cl.currentState()
+    console.log('success: currentState', currentStateRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h2 id="automated-verification-of-state-by-immudb-sdk">Automated verification of state by immudb SDK</h2>
+<p>It's the responsibility of the immudb client to track the server state. That way it can check each verified read or write operation against a trusted state.</p>
+<p>:::: tabs</p>
+<p>::: tab Go
+The component in charge of state handling is the <code>StateService</code>.
+To set up the <code>stateService</code> 3 interfaces need to be implemented and provided to the <code>StateService</code> constructor:
+* <code>Cache</code> interface in the <code>cache</code> package. Standard cache.NewFileCache provides a file state store solution.
+* <code>StateProvider</code> in the <code>stateService</code> package. It provides a fresh state from immudb server when the client is being initialized for the first time. Standard StateProvider provides a service that retrieve immudb first state hash from a gRPC endpoint.
+* <code>UUIDProvider</code> in the <code>stateService</code> package. It provides the immudb identifier. This is needed to allow the client to safely connect to multiple immudb instances. Standard UUIDProvider provides the immudb server identifier from a gRPC endpoint.</p>
+<p>Following an example how to obtain a client instance with a custom state service.</p>
+<pre><code class="language-go">func MyCustomImmuClient(options *c.Options) (cli c.ImmuClient, err error) {
+    ctx := context.Background()
+
+    cli = c.DefaultClient()
+
+    options.DialOptions = cli.SetupDialOptions(options)
+
+    cli.WithOptions(options)
+
+    var clientConn *grpc.ClientConn
+    if clientConn, err = cli.Connect(ctx); err != nil {
+        return nil, err
+    }
+
+    cli.WithClientConn(clientConn)
+
+    serviceClient := schema.NewImmuServiceClient(clientConn)
+    cli.WithServiceClient(serviceClient)
+
+    if err = cli.WaitForHealthCheck(ctx); err != nil {
+        return nil, err
+    }
+
+    immudbStateProvider := stateService.NewImmudbStateProvider(serviceClient)
+    immudbUUIDProvider := stateService.NewImmudbUUIDProvider(serviceClient)
+
+    customDir := &quot;custom_state_dir&quot;
+    os.Mkdir(customDir, os.ModePerm)
+    stateService, err := stateService.NewStateService(
+        cache.NewFileCache(customDir),
+        logger.NewSimpleLogger(&quot;immuclient&quot;, os.Stderr),
+        immudbStateProvider,
+        immudbUUIDProvider)
+    if err != nil {
+        return nil, err
+    }
+
+    dt, err := timestamp.NewDefaultTimestamp()
+    if err != nil {
+        return nil, err
+    }
+
+    ts := c.NewTimestampService(dt)
+    cli.WithTimestampService(ts).WithStateService(stateService)
+
+    return cli, nil
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+from immudb.client import PersistentRootService
+
+# By default RootService is writing state to RAM
+# You can choose different implementation of RootService
+
+# Persistent root service will save to the disk after every verified transaction
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+PERSISTENT_ROOT_SERVICE_PATH = &quot;/tmp/psr.db&quot; 
+
+def main():
+    client = ImmudbClient(URL, rs = PersistentRootService(PERSISTENT_ROOT_SERVICE_PATH))
+    client.login(LOGIN, PASSWORD, database = DB)
+    client.verifiedSet(b'x', b'1')
+    client.verifiedGet(b'x')
+    client.verifiedSet(b'x', b'2')
+    client.verifiedGet(b'x')
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<p>Any immudb server has its own UUID. This is exposed as part of the login response.
+Java SDK can use any implementation of the <code>ImmuStateHolder</code> interface, which specifies two methods:
+- <code>ImmuState getState(String serverUuid, String database)</code> for getting a state.
+- <code>void setState(String serverUuid, ImmuState state)</code> for setting a state.</p>
+<p>Note that a state is related to a specific database (identified by its name) and a server (identified by the UUID).
+Currently, Java SDK offers two implementations of this interface for storing and retriving a state:
+- <code>FileImmuStateHolder</code> that uses a disk file based store.
+- <code>SerializableImmuStateHolder</code> that uses an in-memory store.</p>
+<p>As most of the code snippets include <code>FileImmuStateHolder</code>, please find below an example using the in-memory alternative:</p>
+<pre><code class="language-java">SerializableImmuStateHolder stateHolder = new SerializableImmuStateHolder();
+
+ImmuClient immuClient = ImmuClient.newBuilder()
+                .withStateHolder(stateHolder)
+                .withServerUrl(&quot;localhost&quot;)
+                .withServerPort(3322)
+                .build();
+
+immuClient.login(&quot;immudb&quot;, &quot;immudb&quot;);
+immuClient.useDatabase(&quot;defaultdb&quot;);
+// ...
+immuClient.logout();
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h2 id="verify-state-signature">Verify state signature</h2>
+<p>If <code>immudb</code> is launched with a private signing key, each signed request can be verified with the public key.
+This ensures the server identity.</p>
+<p>To run immudb server with state signature use:</p>
+<pre><code class="language-bash">./immudb --signingKey test/signer/ec1.key
+</code></pre>
+<p>To generate an elliptic curve private key use:</p>
+<pre><code class="language-bash">openssl ecparam -name prime256v1 -genkey -noout -out private.key
+</code></pre>
+<p>To generate the public key from the previous one:</p>
+<pre><code class="language-bash">openssl ec -in private.key -pubout -out public.key
+</code></pre>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">c, err := client.NewImmuClient(client.DefaultOptions().WithServerSigningPubKey(&quot;../../immudb/src/wrong.public.key&quot;))
+if err != nil {
+    log.Fatal(err)
+}
+ctx := context.Background()
+
+_ , err = c.Login(ctx, []byte(`immudb`), []byte(`immudb`))
+if err != nil {
+    log.Fatal(err)
+}
+
+if _, err = c.Set(ctx, []byte(`immudb`), []byte(`hello world`)); err != nil {
+    log.Fatal(err)
+}
+
+var state *schema.ImmutableState
+if state, err = c.CurrentState(ctx); err != nil {
+    log.Fatal(err) // if signature is not verified here is trigger an appropriate error
+}
+
+fmt.Print(state)
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+
+# All operations are checked against public/private key pair
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+KEYFILE = &quot;public_signing_key.pem&quot;  # Public key path 
+                                    # needs immudb server with --signingKey option enabled
+                                    # pointing to corresponding private key
+
+def main():
+    client = ImmudbClient(URL, publicKeyFile = KEYFILE)
+    client.login(LOGIN, PASSWORD, database = DB)
+    client.set(b'x', b'1')
+    client.verifiedGet(b'x')    # This operation will also fail if public key
+                                # is not paired with private one used in immudb
+
+    state = client.currentState()   # immudb.rootService.State
+    print(state.db)         # Current selected DB
+    print(state.txId)       # Current transaction ID
+    print(state.txHash)     # Current transaction hash
+    print(state.signature)  # Current signature
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">// Having immudb server running with state signature enabled
+// (by starting it, for example using `immudb --signingKey private_key.pem`)
+// we provision the client with the public key file, and this implies that
+// state signature verification is done on the client side
+// each time the state is retrieved from the server.
+
+File publicKeyFile = new File(&quot;path/to/public_key.pem&quot;);
+
+immuClient = ImmuClient.newBuilder()
+                    .withServerUrl(&quot;localhost&quot;)
+                    .withServerPort(3322)
+                    .withServerSigningKey(publicKeyFile.getAbsolutePath())
+                    .build();
+
+try {
+    ImmuState state = immuClient.currentState();
+    // It should all be ok as long as the immudb server has been started with
+    // state signature feature enabled, otherwise, this verification will fail.
+
+} catch (RuntimeException e) {
+    // State signature failed.
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+    await cl.set({ key: 'immudb', value: 'hello world' })
+
+    const currentStateRes = await cl.currentState();
+    console.log('success: currentState', currentStateRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<p><br/></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

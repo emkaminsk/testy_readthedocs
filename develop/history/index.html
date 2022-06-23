@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/develop/history/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Queries and history - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Queries and history";
+        var mkdocs_page_input_path = "develop/history.md";
+        var mkdocs_page_url = "/codenotary/immudb/develop/history/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Queries and history</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="queries-and-history">Queries and history</h1>
+<p>The fundamental property of immudb is that it's an append-only database.
+This means that an <em>update</em> does not change an existing record. Instead, it is a new insert of the <strong>same key</strong> with a <strong>new value</strong>.
+It's possible to retrieve all the values for a particular key with the history command.</p>
+<p><code>History</code> accepts the following parameters:
+* <code>Key</code>: a key of an item
+* <code>Offset</code>: the starting index (excluded from the search). Optional
+* <code>Limit</code>: maximum returned items. Optional
+* <code>Desc</code>: items are returned in reverse order. Optional
+* <code>SinceTx</code>: immudb will wait that the transaction specified by SinceTx is processed. Optional</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">    client.Set(ctx, []byte(`hello`), []byte(`immutable world`))
+    client.Set(ctx, []byte(`hello`), []byte(`immudb`))
+
+    req := &amp;schema.HistoryRequest{
+        Key: []byte(`hello`),
+    }
+
+    entries, err := client.History(ctx, req)
+    if  err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf(&quot;Successfully retrieved %d entries for key %s\n&quot;, len(entries), req.Key)
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">try {
+    immuClient.set(&quot;hello&quot;, value1);
+    immuClient.set(&quot;hello&quot;, value2);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+List&lt;KV&gt; historyResponse1 = immuClient.history(&quot;hello&quot;, 10, 0, false, 1);
+</code></pre>
+<p>Note that, similar with many other methods, <code>history</code> method is overloaded to allow different kinds/set of parameters.</p>
+<p>:::</p>
+<p>::: tab Python</p>
+<p>Python immudb sdk currently doesn't support <code>SinceTx</code> parameter</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+
+    client.set(b'test', b'1')
+    client.set(b'test', b'2')
+    client.set(b'test', b'3')
+
+    history = client.history(b'test', 0, 100, True) # List[immudb.datatypes.historyResponseItem]
+    responseItemFirst = history[0]
+    print(responseItemFirst.key)    # Entry key (b'test')
+    print(responseItemFirst.value)  # Entry value (b'3')
+    print(responseItemFirst.tx)     # Transaction id
+
+    responseItemThird = history[2]
+    print(responseItemThird.key)    # Entry key (b'test')
+    print(responseItemThird.value)  # Entry value (b'1')
+    print(responseItemThird.tx)     # Transaction id
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    const key = 'hello'
+
+    await cl.set({ key, value: 'immutable world' })
+    await cl.set({ key, value: 'immudb' })
+
+    const historyReq: Parameters.History = {
+        key
+    }
+    const historyRes = cl.history(historyReq)
+    console.log('success: history', historyRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab .Net
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<p><br/></p>
+<h2 id="counting">Counting</h2>
+<p>Counting entries is not supported at the moment.</p>
+<p>:::: tabs</p>
+<p>::: tab Go
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb/issues/new">Go sdk github project</a>
+:::</p>
+<p>::: tab Java
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4j/issues/new">Java sdk github project</a>
+:::</p>
+<p>::: tab Python
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab .Net
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<p><br/></p>
+<h2 id="scan">Scan</h2>
+<p>The <code>scan</code> command is used to iterate over the collection of elements present in the currently selected database.
+<code>Scan</code> accepts the following parameters:</p>
+<ul>
+<li><code>Prefix</code>: prefix. If not provided all keys will be involved. Optional</li>
+<li><code>SeekKey</code>: initial key for the first entry in the iteration. Optional</li>
+<li><code>Desc</code>: DESC or ASC sorting order. Optional</li>
+<li><code>Limit</code>: maximum returned items. Optional</li>
+<li><code>SinceTx</code>: immudb will wait that the transaction provided by SinceTx be processed. Optional</li>
+<li><code>NoWait</code>: Default false. When true scan doesn't wait for the index to be fully  generated and returns the last indexed value. Optional</li>
+</ul>
+<blockquote>
+<p>To gain speed it's possible to specify <code>noWait=true</code>. The control will be returned to the caller immediately, without waiting for the indexing to complete. When <code>noWait</code> is used, keep in mind that the returned data may not be yet up to date with the inserted data, as the indexing might not have completed.</p>
+</blockquote>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<p>An ordinary <code>scan</code> command and a reversed one.</p>
+<pre><code class="language-go">    client.Set(ctx, []byte(`aaa`), []byte(`item1`))
+    client.Set(ctx, []byte(`bbb`), []byte(`item2`))
+    client.Set(ctx, []byte(`abc`),[]byte(`item3`))
+
+    scanReq := &amp;schema.ScanRequest{
+        Prefix:  []byte(`a`),
+    }
+
+    list, err := client.Scan(ctx, scanReq)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, list)
+    scanReq1 := &amp;schema.ScanRequest{
+        SeekKey: []byte{0xFF},
+        Prefix:  []byte(`a`),
+        Desc:    true,
+    }
+
+    list, err = client.Scan(ctx, scanReq1)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, list)
+
+    // scan on all key  values on the current database, with a fresh snapshot
+    scanReq2 := &amp;schema.ScanRequest{
+        SeekKey: []byte{0xFF},
+        Desc:    true,
+        SinceTx: math.MaxUint64,
+    }
+
+    list, err = client.Scan(ctx, scanReq2)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, list)
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">byte[] value1 = {0, 1, 2, 3};
+byte[] value2 = {4, 5, 6, 7};
+
+try {
+    immuClient.set(&quot;scan1&quot;, value1);
+    immuClient.set(&quot;scan2&quot;, value2);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+// Example of using scan(prefix, sinceTxId, limit, desc).
+List&lt;KV&gt; scanResult = immuClient.scan(&quot;scan&quot;, 1, 5, false);
+// We expect two entries in the result.
+</code></pre>
+<p><code>scan</code> is an overloaded method, therefore multiple flavours of it with different parameter options exist.</p>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+    toSet = {
+        b&quot;aaa&quot;: b'1',
+        b'bbb': b'2',
+        b'ccc': b'3',
+        b'acc': b'1',
+        b'aac': b'2',
+        b'aac:test1': b'3',
+        b'aac:test2': b'1',
+        b'aac:xxx:test': b'2'
+    }
+    client.setAll(toSet)
+
+    result = client.scan(b'', b'', True, 100) # All entries
+    print(result)
+    result = client.scan(b'', b'aac', True, 100) # All entries with prefix 'aac' including 'aac'
+    print(result)
+
+    # Seek key example (allows retrieve entries in proper chunks):
+    result = client.scan(b'', b'', False, 3)
+    while result:
+        for item, value in result.items():
+            print(&quot;SEEK&quot;, item, value)
+        lastKey = list(result.keys())[-1]
+        result = client.scan(lastKey, b'', False, 3)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    await cl.set({ key: 'aaa', value: 'item1' })
+    await cl.set({ key: 'bbb', value: 'item2' })
+    await cl.set({ key: 'abc', value: 'item3' })
+
+    const scanReq: Parameters.Scan = {
+        prefix: 'a',
+        desc: false,
+        limit: 0,
+        sincetx: 0
+    }
+    const scanRes = await cl.scan(scanReq)
+    console.log('success: scan', scanRes)
+
+    const scanReq1: Parameters.Scan = {
+        prefix: 'a',
+        desc: true,
+        limit: 0,
+        sincetx: 0
+    }
+    const scanRes1 = await cl.scan(scanReq1)
+    console.log('success: scan', scanRes1)
+})()
+</code></pre>
+<p>Example with an offset:</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    await cl.set({ key: 'aaa', value: 'item1' })
+    await cl.set({ key: 'bbb', value: 'item2' })
+    await cl.set({ key: 'abc', value: 'item3' })
+
+    const scanReq: Parameters.Scan = {
+        seekkey: '',
+        prefix: '',
+        desc: true,
+        limit: 0,
+        sincetx: 0
+    }
+    const scanRes = await cl.scan(scanReq)
+    console.log('success: scan', scanRes)
+
+    const scanReq1: Parameters.Scan = {
+        seekkey: 'bbb',
+        prefix: '',
+        desc: true,
+        limit: 0,
+        sincetx: 0
+    }
+    const scanRes1 = await cl.scan(scanReq1)
+    console.log('success: scan', scanRes1)
+
+    const scanReq2: Parameters.Scan = {
+        seekkey: 'b',
+        prefix: 'b',
+        desc: true,
+        limit: 0,
+        sincetx: 0
+    }
+    const scanRes2 = await cl.scan(scanReq2)
+    console.log('success: scan', scanRes2)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab .Net
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<p><br/></p>
+<h2 id="references">References</h2>
+<p><code>SetReference</code> is like a "tag" operation. It appends a reference on a key/value element.
+As a consequence, when we retrieve that reference with a <code>Get</code> or <code>VerifiedGet</code> the value retrieved will be the original value associated with the original key.
+Its <code>VerifiedReference</code> counterpart is the same except that it also produces the inclusion and consistency proofs.</p>
+<h3 id="setreference-and-verifiedsetreference">SetReference and VerifiedSetReference</h3>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">    _, err = client.Set(ctx, []byte(`firstKey`),[]byte(`firstValue`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    reference, err := client.SetReference(ctx, []byte(`myTag`), []byte(`firstKey`))
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf(&quot;%v\n&quot;, reference)
+    firstItem, err := client.Get(ctx, []byte(`myTag`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, firstItem)
+</code></pre>
+<p>Example with verifications</p>
+<pre><code class="language-go">    _, err = client.Set(ctx, []byte(`secondKey`),[]byte(`secondValue`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    reference, err = client.VerifiedSetReference(ctx, []byte(`mySecondTag`), []byte(`secondKey`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, reference)
+
+    secondItem, err := client.Get(ctx, []byte(`mySecondTag`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, secondItem)
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">byte[] key = &quot;testRef&quot;.getBytes(StandardCharsets.UTF_8);
+byte[] val = &quot;abc&quot;.getBytes(StandardCharsets.UTF_8);
+
+TxMetadata txMd = null;
+try {
+    txMd = immuClient.set(key, val);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+byte[] ref1Key = &quot;ref1_to_testRef&quot;.getBytes(StandardCharsets.UTF_8);
+byte[] ref2Key = &quot;ref2_to_testRef&quot;.getBytes(StandardCharsets.UTF_8);
+
+try {
+    txMd = immuClient.setReference(ref1Key, key);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+try {
+    txMd = immuClient.verifiedSetReference(ref2Key, key);
+} catch (VerificationException e) {
+    // ...
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+    client.verifiedSet(b'x', b'1') 
+    client.verifiedSet(b'y', b'1') 
+    retrieved = client.verifiedGet(b'x') 
+    print(retrieved.refkey)     # Entry reference key (None)
+
+    client.verifiedSetReference(b'x', b'reference1')
+    client.setReference(b'x', b'reference2')
+    client.setReference(b'y', b'reference2')
+    client.verifiedSet(b'y', b'2') 
+
+    retrieved = client.verifiedGet(b'reference1')
+    print(retrieved.key)        # Entry key (b'x')
+    print(retrieved.refkey)     # Entry reference key (b'reference1')
+    print(retrieved.verified)   # Entry verification status (True)
+
+    retrieved = client.verifiedGet(b'reference2')
+    print(retrieved.key)        # Entry key (b'y')
+    print(retrieved.refkey)     # Entry reference key (b'reference2')
+    print(retrieved.verified)   # Entry verification status (True)
+    print(retrieved.value)      # Entry value (b'3')
+
+    retrieved = client.verifiedGet(b'x')
+    print(retrieved.key)        # Entry key (b'x')
+    print(retrieved.refkey)     # Entry reference key (None)
+    print(retrieved.verified)   # Entry verification status (True)
+
+    retrieved = client.get(b'reference2')
+    print(retrieved.key)        # Entry key (b'y')
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    const setReq: Parameters.Set = {
+        key: 'firstKey',
+        value: 'firstValue'
+    }
+    await cl.set(setReq)
+
+    const referenceReq: Parameters.SetReference = {
+        key: 'myTag',
+        referencedKey: 'firstKey'
+    }
+    const referenceRes = await cl.setReference(referenceReq)
+    console.log('success: setReference', referenceRes)
+
+    const getReq: Parameters.Get = {
+        key: 'myTag'
+    }
+    const getRes = await cl.get(getReq)
+    console.log('success: get by reference', getRes)
+})()
+</code></pre>
+<p>Example with verifications</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    const setReq: Parameters.Set = {
+        key: 'firstKey',
+        value: 'firstValue'
+    }
+    await cl.set(setReq)
+
+    const verifiedReferenceReq: Parameters.SetReference = {
+        key: 'myTag',
+        referencedKey: 'firstKey'
+    }
+    const verifiedReferenceRes = await cl.verifiedSetReference(verifiedReferenceReq)
+    console.log('success: verifiedSetReference', verifiedReferenceRes)
+
+    const getReq: Parameters.Get = {
+        key: 'myTag'
+    }
+    const getRes = await cl.get(getReq)
+    console.log('success: get by reference', getRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab .Net
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h3 id="getreference-and-verifiedgetreference">GetReference and VerifiedGetReference</h3>
+<p>When reference is resolved with get or verifiedGet in case of multiples equals references the last reference is returned.
+:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">    _, err = client.Set(ctx, []byte(`secondKey`),[]byte(`secondValue`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    _, err = client.Set(ctx, []byte(`secondKey`),[]byte(`thirdValue`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    reference, err = client.VerifiedSetReference(ctx, []byte(`myThirdTag`), []byte(`secondKey`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, reference)
+
+    thirdItem, err := client.Get(ctx, []byte(`myThirdTag`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, thirdItem)
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<p>This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4j/issues/new">Java sdk github project</a></p>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+    client.verifiedSet(b'x', b'1') 
+    client.verifiedSet(b'y', b'1') 
+    retrieved = client.verifiedGet(b'x') 
+    print(retrieved.refkey)     # Entry reference key (None)
+
+    client.verifiedSetReference(b'x', b'reference1')
+    client.setReference(b'x', b'reference2')
+    client.setReference(b'y', b'reference2')
+    client.verifiedSet(b'y', b'2') 
+
+    retrieved = client.verifiedGet(b'reference1')
+    print(retrieved.key)        # Entry key (b'x')
+    print(retrieved.refkey)     # Entry reference key (b'reference1')
+    print(retrieved.verified)   # Entry verification status (True)
+
+    retrieved = client.verifiedGet(b'reference2')
+    print(retrieved.key)        # Entry key (b'y')
+    print(retrieved.refkey)     # Entry reference key (b'reference2')
+    print(retrieved.verified)   # Entry verification status (True)
+    print(retrieved.value)      # Entry value (b'3')
+
+    retrieved = client.verifiedGet(b'x')
+    print(retrieved.key)        # Entry key (b'x')
+    print(retrieved.refkey)     # Entry reference key (None)
+    print(retrieved.verified)   # Entry verification status (True)
+
+    retrieved = client.get(b'reference2')
+    print(retrieved.key)        # Entry key (b'y')
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    const setReq: Parameters.Set = {
+        key: 'firstKey',
+        value: 'firstValue'
+    }
+    await cl.set(setReq)
+    const setReq1: Parameters.Set = {
+        key: 'secondKey',
+        value: 'secondValue'
+    }
+    await cl.set(setReq1)
+
+    const verifiedReferenceReq: Parameters.SetReference = {
+        key: 'myTag',
+        referencedKey: 'firstKey'
+    }
+    await cl.verifiedSetReference(verifiedReferenceReq)
+    const verifiedReferenceReq1: Parameters.SetReference = {
+        key: 'myTag',
+        referencedKey: 'secondKey'
+    }
+    await cl.verifiedSetReference(verifiedReferenceReq1)
+
+    const getReq: Parameters.Get = {
+        key: 'myTag'
+    }
+    const getSecondItemRes = await cl.get(getReq)
+    console.log('success: get by second reference', getSecondItemRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab .Net
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h3 id="resolving-reference-with-transaction-id">Resolving reference with transaction id</h3>
+<p>It's possible to bind a reference to a key on a specific transaction using <code>SetReferenceAt</code> and <code>VerifiedSetReferenceAt</code></p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">    meta, err := client.Set(ctx, []byte(`secondKey`),[]byte(`secondValue`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    _ , err = client.Set(ctx, []byte(`secondKey`),[]byte(`thirdValue`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    reference, err = client.VerifiedSetReferenceAt(ctx, []byte(`myThirdTag`), []byte(`secondKey`), meta.Id )
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, reference)
+
+    thirdItem, err := client.Get(ctx, []byte(`myThirdTag`))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&quot;%v\n&quot;, thirdItem)
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">byte[] key = &quot;testRef&quot;.getBytes(StandardCharsets.UTF_8);
+byte[] val = &quot;abc&quot;.getBytes(StandardCharsets.UTF_8);
+
+byte[] refKey = &quot;ref1_to_testRef&quot;.getBytes(StandardCharsets.UTF_8);
+TxMetadata setTxMd = null;
+
+try {
+    txMd = immuClient.set(key, val);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+try {
+    immuClient.setReferenceAt(refKey, key, txMd.id);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+try {
+    txMd = immuClient.verifiedSetReferenceAt(refKey, key, txMd.id);
+} catch (VerificationException e) {
+    // ...
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    const { id } = await cl.set({ key: 'firstKey', value: 'firstValue' })
+    await cl.set({ key: 'firstKey', value: 'secondValue' })
+
+    const verifiedSetReferenceAtReq: Parameters.VerifiedSetReferenceAt = {
+        key: 'myFirstTag',
+        referencedKey: 'firstKey',
+        attx: id
+    }
+    const verifiedSetReferenceAtRes = await cl.verifiedSetReferenceAt(verifiedSetReferenceAtReq)
+    console.log('success: verifiedSetReferenceAt', verifiedSetReferenceAtRes)
+
+    const getSecondItemRes = await cl.get({ key: 'myFirstTag' })
+    console.log('success: get second item by reference', getSecondItemRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab .Net
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

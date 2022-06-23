@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/develop/indexes/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Secondary indexes - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Secondary indexes";
+        var mkdocs_page_input_path = "develop/indexes.md";
+        var mkdocs_page_url = "/codenotary/immudb/develop/indexes/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Secondary indexes</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="secondary-indexes">Secondary indexes</h1>
+<p>On top of the key value store immudb provides secondary indexes to help developers to handle complex queries.</p>
+<h2 id="sorted-sets">Sorted sets</h2>
+<p>The <code>sorted set</code> data type provides a simple secondary index that can be created with immudb.
+This data structure contains a set of references to other key-value entries.
+Elements of this set are ordered using a floating-point <code>score</code> specified for each element upon insertion.
+Entries having equal score will have the order in which they were inserted into the set.</p>
+<blockquote>
+<p>Note: The score type is a 64-bit floating point number to support a large number of uses cases.
+64-bit floating point gives a lot of flexibility and dynamic range, at the expense of having only 53-bits of integer.
+When a 64-bit integer is cast to a float value there <em>could</em> be a loss of precision,
+in which case the order of entries having same float64 score value will be determined by the insertion order.</p>
+</blockquote>
+<p>The KV entry referenced in the set can be bound to a specific transaction id - such entry is called a <code>bound</code> reference.
+A <code>bound</code> reference will always get the value for the key at a specific transaction instead of the most recent value,
+including a case where one set contains multiple values for the same key but for different transactions.
+That way, sets allow optimal access to historical data using a single immudb read operation.</p>
+<blockquote>
+<p>Note: If a compound operation is executed with the <code>ExecAll</code> call,
+a bound entry added to the set can reference a key created/updated in the same <code>ExecAll</code> call.
+To make such an operation, set the <code>BoundRef</code> value to <code>true</code> and the <code>AtTx</code> value to <code>0</code>.</p>
+</blockquote>
+<p>Inserting entries into sets can be done using the following operations:
+<code>ZAdd</code>, <code>VerifiedZAdd</code>, <code>ZAddAt</code>, <code>VerifiedZAddAt</code>, <code>ExecAll</code>.
+Those operations accept the following parameters:</p>
+<ul>
+<li><code>Set</code>: the name of the collection</li>
+<li><code>Score</code>: entry score used to order items within the set</li>
+<li><code>Key</code>: the key of entry to be added to the set</li>
+<li><code>AtTx</code>: for bound references, a transaction id at which the value will be read,
+  if set to <code>0</code> for <code>ExecAll</code> operation, current transaction id will be used. Optional</li>
+<li><code>BoundRef</code>: if set to true, this will be a reference bound to a specific transaction. Optional</li>
+<li><code>NoWait</code>: if set to true, don't wait for indexing to be finished after adding this entry</li>
+</ul>
+<p>Reading data from the set can be done using the following operations:
+<code>ZScan</code>, <code>StreamZScan</code>. Those operations accept the following parameters:</p>
+<ul>
+<li><code>Set</code>: the name of the collection</li>
+<li><code>SeekKey</code>: initial key for the first entry in the iteration. Optional</li>
+<li><code>SeekScore</code>: the min or max score for the first entry in the iteration, depending on Desc value. Optional</li>
+<li><code>SeekAtTx</code>: the tx id for the first entry in the iteration. Optional</li>
+<li><code>InclusiveSeek</code>: the element resulting from the combination of the <code>SeekKey</code> <code>SeekScore</code> and <code>SeekAtTx</code>
+  is returned with the result. Optional</li>
+<li><code>Desc</code>: If set to true, entries will be returned in an descending (reversed) order. Optional</li>
+<li><code>SinceTx</code>: immudb will wait that the transaction provided by SinceTx be processed. Optional</li>
+<li><code>NoWait</code>: when true scan doesn't wait that txSinceTx is processed. Optional</li>
+<li><code>MinScore</code>: minimum score filter. Optional</li>
+<li><code>MaxScore</code>: maximum score filter. Optional</li>
+<li><code>Limit</code>: maximum number of returned items. Optional</li>
+</ul>
+<blockquote>
+<p>Note: issuing a <code>ZScan</code> or <code>StreamZScan</code> operation will by default wait for the index to be up-to-date.
+To avoid waiting for the index (and  thus to allow reading the data from some older state),
+set the <code>SinceTx</code> to a very high value exceeding the most recent transaction id
+(e.g. maximum int value) and set <code>NoWait</code> to <code>true</code>.</p>
+</blockquote>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">i1, err := client.Set(ctx,
+    []byte(`user1`),
+    []byte(`user1@mail.com`),
+)
+if err != nil{
+    log.Fatal(err)
+}
+i2, err := client.Set(ctx,
+    []byte(`user2`),
+    []byte(`user2@mail.com`),
+)
+if err != nil{
+    log.Fatal(err)
+}
+i3, err := client.Set(ctx,
+    []byte(`user3`),
+    []byte(`user3@mail.com`),
+)
+if err != nil{
+    log.Fatal(err)
+}
+i4, err := client.Set(ctx,
+    []byte(`user3`),
+    []byte(`another-user3@mail.com`),
+)
+if err != nil{
+    log.Fatal(err)
+}
+
+if _ , err = client.ZAddAt(ctx,
+    []byte(`age`), 25, []byte(`user1`), i1.Id,
+); err != nil {
+    log.Fatal(err)
+}
+if _ , err = client.ZAddAt(ctx,
+    []byte(`age`), 36, []byte(`user2`), i2.Id,
+); err != nil {
+    log.Fatal(err)
+}
+if _ , err = client.ZAddAt(ctx,
+    []byte(`age`), 36, []byte(`user3`), i3.Id,
+); err != nil {
+    log.Fatal(err)
+}
+if _ , err = client.ZAddAt(ctx,
+    []byte(`age`), 54, []byte(`user3`), i4.Id,
+); err != nil {
+    log.Fatal(err)
+}
+
+zscanOpts1 := &amp;schema.ZScanRequest{
+    Set:     []byte(`age`),
+    SinceTx: math.MaxUint64,
+    NoWait: true,
+    MinScore: &amp;schema.Score{Score: 36},
+}
+
+the36YearsOldList, err := client.ZScan(ctx, zscanOpts1)
+if err != nil{
+    log.Fatal(err)
+}
+s, _ := json.MarshalIndent(the36YearsOldList, &quot;&quot;, &quot;\t&quot;)
+fmt.Print(string(s))
+
+oldestReq := &amp;schema.ZScanRequest{
+    Set:           []byte(`age`),
+    SeekKey:       []byte{0xFF},
+    SeekScore:     math.MaxFloat64,
+    SeekAtTx:      math.MaxUint64,
+    Limit:         1,
+    Desc:          true,
+    SinceTx:       math.MaxUint64,
+    NoWait:        true,
+}
+
+oldest, err := client.ZScan(ctx, oldestReq)
+if err != nil{
+    log.Fatal(err)
+}
+s, _ = json.MarshalIndent(oldest, &quot;&quot;, &quot;\t&quot;)
+fmt.Print(string(s))
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">byte[] value1 = {0, 1, 2, 3};
+byte[] value2 = {4, 5, 6, 7};
+
+try {
+    immuClient.set(&quot;zadd1&quot;, value1);
+    immuClient.set(&quot;zadd2&quot;, value2);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+TxMetadata set1TxMd = null;
+try {
+    immuClient.zAdd(&quot;set1&quot;, 1, &quot;zadd1&quot;);
+    set1TxMd = immuClient.zAdd(&quot;set1&quot;, 2, &quot;zadd2&quot;);
+
+    immuClient.zAddAt(&quot;set1&quot;, 3, &quot;zadd3&quot;, set1TxMd.id);
+
+    immuClient.zAdd(&quot;set2&quot;, 2, &quot;zadd1&quot;);
+    immuClient.zAdd(&quot;set2&quot;, 1, &quot;zadd2&quot;);
+} catch (CorruptedDataException e) {
+    // ...
+}
+
+List&lt;KV&gt; zScan1 = immuClient.zScan(&quot;set1&quot;, set1TxMd.id, 5, false);
+// We expect two KVs with key names &quot;zadd1&quot; and &quot;zadd2&quot;.
+
+List&lt;KV&gt; zScan2 = immuClient.zScan(&quot;set2&quot;, 5, false);
+// Same as before, we expect two KVs with key names &quot;zadd2&quot; and &quot;zadd1&quot;.
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+    client.set(b&quot;user1&quot;, b&quot;user1@mail.com&quot;)
+    client.set(b&quot;user2&quot;, b&quot;user2@mail.com&quot;)
+    client.set(b&quot;user3&quot;, b&quot;user3@mail.com&quot;)
+    client.set(b&quot;user4&quot;, b&quot;user3@mail.com&quot;)
+
+    client.zAdd(b&quot;age&quot;, 100, b&quot;user1&quot;)
+    client.zAdd(b&quot;age&quot;, 101, b&quot;user2&quot;)
+    client.zAdd(b&quot;age&quot;, 99, b&quot;user3&quot;)
+    client.zAdd(b&quot;age&quot;, 100, b&quot;user4&quot;)
+
+    scanResult = client.zScan(b&quot;age&quot;, b&quot;&quot;, 0, 0, True, 50, False, 100, 101)
+    print(scanResult)   # Shows records with 'age' 100 &lt;= score &lt; 101
+                        # with descending order and limit = 50
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+    await cl.login({ user: IMMUDB_USER, password: IMMUDB_PWD })
+
+    const { id: id1 } = await cl.set({ key: 'user1', value: 'user1@mail.com' })
+    const { id: id2 } = await cl.set({ key: 'user2', value: 'user2@mail.com' })
+    const { id: id3 } = await cl.set({ key: 'user3', value: 'user3@mail.com' })
+    const { id: id4 } = await cl.set({ key: 'user3', value: 'another-user3@mail.com' })
+
+    const zAddAtReq1: Parameters.ZAddAt = {
+        set: 'age',
+        score: 25,
+        key: 'user1',
+        attx: id1
+    }
+    const zAddAtRes1 = await cl.zAddAt(zAddAtReq1)
+    const zAddAtReq2: Parameters.ZAddAt = {
+        set: 'age',
+        score: 36,
+        key: 'user2',
+        attx: id2
+    }
+    const zAddAtRes2 = await cl.zAddAt(zAddAtReq2)
+    const zAddAtReq3: Parameters.ZAddAt = {
+        set: 'age',
+        score: 36,
+        key: 'user3',
+        attx: id3
+    }
+    const zAddAtRes3 = await cl.zAddAt(zAddAtReq3)
+    const zAddAtReq4: Parameters.ZAddAt = {
+        set: 'age',
+        score: 54,
+        key: 'user4',
+        attx: id4
+    }
+    const zAddAtRes4 = await cl.zAddAt(zAddAtReq4)
+
+    const zScanReq: Parameters.ZScan = {
+        set: 'age',
+        sincetx: 0,
+        nowait: true,
+        minscore: {
+            score: 36
+        }
+    }
+    const zScanRes = await cl.zScan(zScanReq)
+    console.log('success: zScan all 36-years-old users', zScanRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab .Net
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

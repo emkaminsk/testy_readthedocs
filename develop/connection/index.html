@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/develop/connection/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Connecting - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Connecting";
+        var mkdocs_page_input_path = "develop/connection.md";
+        var mkdocs_page_url = "/codenotary/immudb/develop/connection/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Connecting</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="connecting">Connecting</h1>
+<h2 id="with-credentials">With credentials</h2>
+<p>The immudb server runs on port 3322 as the default. The code examples below illustrate how to connect your client to the server and authenticate using default options and the default username and password.
+You can modify defaults on the immudb server in <a href="https://github.com/codenotary/immudb/blob/master/configs/immudb.toml">immudb.toml</a> in the config folder.
+:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;context&quot;
+    &quot;log&quot;
+
+    immudb &quot;github.com/codenotary/immudb/pkg/client&quot;
+)
+
+func main() {
+    opts := immudb.DefaultOptions().
+        WithAddress(&quot;localhost&quot;).
+        WithPort(3322)
+
+    client := immudb.NewClient().WithOptions(opts)
+    err := client.OpenSession(context.TODO(), []byte(`immudb`), []byte(`immudb`), &quot;defaultdb&quot;)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    defer client.CloseSession(context.TODO())
+
+    // do amazing stuff
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python</p>
+<pre><code class="language-python">from grpc import RpcError
+from immudb import ImmudbClient
+
+URL = &quot;localhost:3322&quot;  # immudb running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+
+def main():
+    client = ImmudbClient(URL)
+    # database parameter is optional
+    client.login(LOGIN, PASSWORD, database=DB)
+    client.logout()
+
+    # Bad login
+    try:
+        client.login(&quot;verybadlogin&quot;, &quot;verybadpassword&quot;)
+    except RpcError as exception:
+        print(exception.debug_error_string())
+        print(exception.details())
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+
+</code></pre>
+<p>:::</p>
+<p>::: tab Java</p>
+<p>Under the hood, during <code>login</code>, a token is being retrieved from the server,
+stored in memory and reused for subsequent operations.</p>
+<p>The state is internally used for doing <em>verified</em> operations (such as verifiedSet or verifiedGet).</p>
+<pre><code class="language-java">// Setting the &quot;store&quot; where the internal states are being persisted.
+FileImmuStateHolder stateHolder = FileImmuStateHolder.newBuilder()
+            .withStatesFolder(&quot;immu_states&quot;)
+            .build();
+
+// Creating an new ImmuClient instance.
+ImmuClient immuClient = ImmuClient.newBuilder()
+            .withStateHolder(stateHolder)
+            .withServerUrl(&quot;localhost&quot;)
+            .withServerPort(3322)
+            .build();
+
+// Login with default credentials.
+immuClient.login(&quot;immudb&quot;, &quot;immudb&quot;);
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h2 id="with-mutual-tls">With Mutual TLS</h2>
+<p>To enable mutual authentication, a certificate chain must be provided to both the server and client.
+That will cause each to authenticate with the other simultaneously.
+In order to generate certs, use the <a href="https://github.com/codenotary/immudb/tree/master/tools/mtls">generate.sh</a> tool from immudb repository. It generates a list of folders containing certificates and private keys to set up a mTLS connection.</p>
+<p><WrappedSection></p>
+<pre><code class="language-bash">./generate.sh localhost mysecretpassword
+</code></pre>
+<p></WrappedSection></p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;context&quot;
+    &quot;log&quot;
+
+    immudb &quot;github.com/codenotary/immudb/pkg/client&quot;
+)
+
+func main() {
+    // Folder cotaining MTLS certificates
+    pathToMTLSFolder := &quot;./mtls&quot;
+
+    opts := immudb.DefaultOptions().
+        WithAddress(&quot;localhost&quot;).
+        WithPort(3322).
+        WithMTLs(true).
+        WithMTLsOptions(
+            immudb.MTLsOptions{}.
+                WithCertificate(pathToMTLSFolder + &quot;/4_client/certs/localhost.cert.pem&quot;).
+                WithPkey(pathToMTLSFolder + &quot;/4_client/private/localhost.key.pem&quot;).
+                WithClientCAs(pathToMTLSFolder + &quot;/2_intermediate/certs/ca-chain.cert.pem&quot;).
+                WithServername(&quot;localhost&quot;),
+        )
+
+    client := immudb.NewClient().WithOptions(opts)
+    err := client.OpenSession(context.TODO(), []byte(`immudb`), []byte(`immudb`), &quot;defaultdb&quot;)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    defer client.CloseSession(context.TODO())
+
+    // do amazing stuff
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Java
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4j/issues/new">Java sdk github project</a>
+:::</p>
+<p>::: tab Node.js</p>
+<pre><code class="language-ts">import ImmudbClient from 'immudb-node'
+import Parameters from 'immudb-node/types/parameters'
+
+const IMMUDB_HOST = '127.0.0.1'
+const IMMUDB_PORT = '3322'
+const IMMUDB_USER = 'immudb'
+const IMMUDB_PWD = 'immudb'
+
+const cl = new ImmudbClient({ host: IMMUDB_HOST, port: IMMUDB_PORT });
+
+(async () =&gt; {
+ const loginReq: Parameters.Login = { user: IMMUDB_USER, password: IMMUDB_PWD }
+ const loginRes = await cl.login(loginReq)
+ console.log('success: login:', loginRes)
+})()
+</code></pre>
+<p>:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+<h2 id="no-auth">No Auth</h2>
+<p>You also have the option to run immudb with authentication disabled. This method is depreciated and not recommended.  </p>
+<p><WrappedSection></p>
+<pre><code class="language-bash">$ ./immudb --auth=false
+</code></pre>
+<p></WrappedSection></p>
+<p>However, without authentication enabled, it's not possible to connect to a server already configured with databases and user permissions. If a valid token is present, authentication is enabled by default.</p>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;context&quot;
+    &quot;log&quot;
+
+    immudb &quot;github.com/codenotary/immudb/pkg/client&quot;
+)
+
+func main() {
+    client, err := immudb.NewImmuClient(
+        immudb.DefaultOptions().
+            WithAddress(&quot;localhost&quot;).
+            WithPort(3322).
+            WithAuth(false),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    _, err = client.VerifiedSet(context.TODO(), []byte(`immudb`), []byte(`hello world`))
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Python
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-py/issues/new">Python sdk github project</a>
+:::</p>
+<p>::: tab Java</p>
+<pre><code class="language-java">FileImmuStateHolder stateHolder = FileImmuStateHolder.newBuilder()
+            .withStatesFolder(&quot;immu_states&quot;)
+            .build();
+
+ImmuClient immuClient = ImmuClient.newBuilder()
+            .withStateHolder(stateHolder)
+            .withServerUrl(&quot;localhost&quot;)
+            .withServerPort(3322)
+            .withAuth(false) // No authentication is needed.
+            .build();
+try {
+    immuClient.set(key, val);
+} catch (CorruptedDataException e) {
+    // ...
+}
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

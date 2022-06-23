@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/develop/sql/tablescreate/" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Creating tables - Immudb documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Creating tables";
+        var mkdocs_page_input_path = "develop/sql/tablescreate.md";
+        var mkdocs_page_url = "/codenotary/immudb/develop/sql/tablescreate/";
+      </script>
+    
+    <script src="../../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Creating tables</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="creating-tables">Creating tables</h1>
+<p><WrappedSection></p>
+<p>Common examples of <code>CREATE TABLE</code> statements are presented below.</p>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS customers (
+    id            INTEGER,
+    customer_name VARCHAR[60],
+    email         VARCHAR[150],
+    address       VARCHAR,
+    city          VARCHAR,
+    ip            VARCHAR[40],
+    country       VARCHAR[15],
+    age           INTEGER,
+    active        BOOLEAN,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS products (
+    id          INTEGER,
+    product     VARCHAR NOT NULL,
+    price       VARCHAR NOT NULL,
+    created_at  TIMESTAMP,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+    id          INTEGER AUTO_INCREMENT,
+    customerid  INTEGER,
+    productid   INTEGER,
+    created_at  TIMESTAMP,
+    PRIMARY KEY id
+);
+
+CREATE TABLE customer_review(
+    customerid  INTEGER,
+    productid   INTEGER,
+    review      VARCHAR,
+    created_at  TIMESTAMP,
+    PRIMARY KEY (customerid, productid)
+);
+</code></pre>
+<h3 id="if-not-exists">IF NOT EXISTS</h3>
+<p>With this clause the <code>CREATE TABLE</code> statement will not fail if a table with same name already exists.</p>
+<p>Note: If the table already exists, it is not compared against the provided table definition neither it is
+      updated to match it.</p>
+<h3 id="not-null">NOT NULL</h3>
+<p>Columns marked as not null can not have a null value assigned.</p>
+<h3 id="primary-key">PRIMARY KEY</h3>
+<p>Every table in immudb must have a primary key.
+Primary key can use at least 1 and up to 8 columns.</p>
+<p>Columns used in a primary key can not have <code>NULL</code> values assigned,
+even if those columns are not explicitly marked as <code>NOT NULL</code>.</p>
+<p>Primary key creates an implicit unique index on all contained columns.</p>
+<h3 id="auto_increment">AUTO_INCREMENT</h3>
+<p>A single-column <code>PRIMARY KEY</code> can be marked as <code>AUTO_INCREMENT</code>.
+immudb will automatically set a unique value of this column for new rows.</p>
+<p>When inserting data into a table with an <code>INSERT</code> statement,
+the value for such primary key must be omitted.
+When updating data in such table with <code>UPSERT</code> statement,
+the value for such primary key is obligatory
+and the <code>UPSERT</code> statement can only update existing rows.</p>
+<p>The type of an <code>AUTO_INCREMENT</code> column must be <code>INTEGER</code>.
+Internally immudb will assign sequentially increasing values for new rows
+ensuring this value is unique within a single table.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h3 id="foreign-keys">Foreign keys</h3>
+<p>Explicit support for relations to foreign tables is not currently supported in immudb.
+It is possible however to create ordinary columns containing foreign key values that can be used in <code>JOIN</code> statements.
+Application logic is responsible for ensuring data consistency and foreign key constraints.</p>
+<pre><code class="language-sql">SELECT * FROM orders
+INNER JOIN customers ON customers.id = orders.customerid
+INNER JOIN products ON products.id = orders.productid;
+</code></pre>
+<p></WrappedSection></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../../..';</script>
+    <script src="../../../js/theme_extra.js" defer></script>
+    <script src="../../../js/theme.js" defer></script>
+      <script src="../../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/operations/monitoring/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Health Monitoring - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Health Monitoring";
+        var mkdocs_page_input_path = "operations/monitoring.md";
+        var mkdocs_page_url = "/codenotary/immudb/operations/monitoring/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Health Monitoring</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="health-monitoring">Health Monitoring</h1>
+<p><WrappedSection></p>
+<p>immudb exposes a Prometheus end-point, by default on port 9497 on <code>/metrics</code>.<br/></p>
+<pre><code class="language-bash">$ curl -s http://localhost:9497/metrics 
+# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile=&quot;0&quot;} 1.3355e-05
+go_gc_duration_seconds{quantile=&quot;0.25&quot;} 1.3615e-05
+go_gc_duration_seconds{quantile=&quot;0.5&quot;} 1.9991e-05
+go_gc_duration_seconds{quantile=&quot;0.75&quot;} 3.0348e-05
+go_gc_duration_seconds{quantile=&quot;1&quot;} 3.3859e-05
+go_gc_duration_seconds_sum 0.000151623
+go_gc_duration_seconds_count 7
+# HELP go_goroutines Number of goroutines that currently exist.
+...
+</code></pre>
+<p>Querying metrics with a simple curl command is not a very practical solution. immudb has predefined Grafana dashboard visualizing some of the key metrics. This dashboard can be downloaded from <a href="https://github.com/codenotary/immudb/blob/master/tools/monitoring/grafana-dashboard.json">immudb github repository</a>.</p>
+<div class="wrapped-picture">
+
+![immudb grafana stats](/immudb/grafana-immudb.png)
+
+</div>
+
+<p>You can also use <code>immuadmin stats</code> to see these metrics without additional tools:</p>
+<pre><code class="language-bash">$ ./immuadmin stats
+</code></pre>
+<div class="wrapped-picture blend-screen">
+
+![immuadmin stats](/immudb/immuadmin-stats.png)
+
+</div>
+
+<p>immudb exports the standard Go metrics, so dashboards like <a href="https://grafana.com/grafana/dashboards/10826">Go metrics</a> work out of the box.</p>
+<div class="wrapped-picture">
+
+![immuadmin stats](/immudb/grafana-go.jpg)
+
+</div>
+
+<p>For very simple cases, you can use <code>immuadmin status</code> from monitoring scripts to ping the server:</p>
+<pre><code class="language-bash">$ ./immuadmin status
+OK - server is reachable and responding to queries
+</code></pre>
+<p></WrappedSection></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

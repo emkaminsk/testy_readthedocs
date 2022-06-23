@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/develop/sql/embeddingSQL/" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Embedding immudb in your application - Immudb documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Embedding immudb in your application";
+        var mkdocs_page_input_path = "develop/sql/embeddingSQL.md";
+        var mkdocs_page_url = "/codenotary/immudb/develop/sql/embeddingSQL/";
+      </script>
+    
+    <script src="../../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Embedding immudb in your application</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="embedding-immudb-in-your-application">Embedding immudb in your application</h1>
+<p>Using the Go client SDK means you are connecting to a immudb database server. There are cases where you don't want a separate server but embed immudb directly in the same application process, as a library.</p>
+<p>immudb provides you a immutable embedded SQL engine which keeps all history, is tamper-proof and can travel in time.
+The SQL engine is mounted on top of the embedded key value store.
+The following illustrative example showcase how to initialize the SQL engine, write and read data in the scope of a SQL transaction.</p>
+<p><WrappedSection></p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;log&quot;
+
+    &quot;github.com/codenotary/immudb/embedded/sql&quot;
+    &quot;github.com/codenotary/immudb/embedded/store&quot;
+)
+
+func handleErr(err error) {
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+
+func main() {
+    // create/open immudb store at specified path
+    st, err := store.Open(&quot;data&quot;, store.DefaultOptions())
+    handleErr(err)
+    defer st.Close()
+
+    // initialize sql engine (specify a key-prefix to isolate generated kv entries)
+    engine, err := sql.NewEngine(st, sql.DefaultOptions().WithPrefix([]byte(&quot;sql&quot;)))
+    handleErr(err)
+
+    _, _, err = engine.Exec(&quot;CREATE DATABASE db1;&quot;, nil, nil)
+    handleErr(err)
+
+    // a sql tx is created and carried over next statements
+    sqltx, _, err := engine.Exec(&quot;BEGIN TRANSACTION;&quot;, nil, nil)
+    handleErr(err)
+
+    // ensure tx is closed (it won't affect committed tx)
+    defer engine.Exec(&quot;ROLLBACK;&quot;, nil, sqltx)
+
+    // set the database to use in the context of the ongoing sql tx
+    _, _, err = engine.Exec(&quot;USE DATABASE db1;&quot;, nil, sqltx)
+    handleErr(err)
+
+    // creates a table
+    _, _, err = engine.Exec(`
+        CREATE TABLE journal (
+            id INTEGER,
+            date TIMESTAMP,
+            creditaccount INTEGER,
+            debitaccount INTEGER,
+            amount INTEGER,
+            description VARCHAR,
+            PRIMARY KEY id
+        );`, nil, sqltx)
+    handleErr(err)
+
+    // insert some rows
+    _, _, err = engine.Exec(`
+        INSERT INTO journal (
+            id,
+            date,
+            creditaccount,
+            debitaccount,
+            amount,
+            description
+        ) VALUES 
+            (1, NOW(), 100, 0, 4000, 'CREDIT'),
+            (2, NOW(), 0, 50, 4100, 'DEBIT')
+        ;`, nil, sqltx)
+    handleErr(err)
+
+    // query data including ongoing and unconfirmed changes
+    rowReader, err := engine.Query(`
+            SELECT id, date, creditaccount, debitaccount, amount, description
+            FROM journal
+            WHERE amount &gt; @value;
+    `, map[string]interface{}{&quot;value&quot;: 100}, sqltx)
+    handleErr(err)
+
+    // ensure row reader is closed
+    defer rowReader.Close()
+
+    // selected columns can be read from the rowReader
+    cols, err := rowReader.Columns()
+    handleErr(err)
+
+    for {
+        // iterate over result set
+        row, err := rowReader.Read()
+        if err == sql.ErrNoMoreRows {
+            break
+        }
+        handleErr(err)
+
+        // each row contains values for the selected columns
+        log.Printf(&quot;row: %v\n&quot;, row.Values[cols[0].Selector()].Value())
+    }
+
+    // close row reader
+    rowReader.Close()
+
+    // commit ongoing transaction
+    _, _, err = engine.Exec(&quot;COMMIT;&quot;, nil, sqltx)
+    handleErr(err)
+}
+</code></pre>
+<p>If you need to change options like where things get stored by default, you can do that in the underlying store objects that the SQL engine is using.</p>
+<p></WrappedSection></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../../..';</script>
+    <script src="../../../js/theme_extra.js" defer></script>
+    <script src="../../../js/theme.js" defer></script>
+      <script src="../../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/develop/sql/transactions/" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>Transactions - Immudb documentation</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Transactions";
+        var mkdocs_page_input_path = "develop/sql/transactions.md";
+        var mkdocs_page_url = "/codenotary/immudb/develop/sql/transactions/";
+      </script>
+    
+    <script src="../../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Transactions</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="transactions">Transactions</h1>
+<p>immudb supports transactions both on key-value and SQL level, but interactive transactions are supported only on SQL with the exception of <code>execAll</code> method, that provides some additional properties.</p>
+<p>Interactive transactions are a way to execute multiple SQL statements in a single transaction. This makes possible to delegate application logic to SQL statements - a very common use case is for example checking if the balance &gt; 0 before making a purchase.
+In order to create a transaction, you must call the <code>NewTx()</code> method on the client instance. The resulting object is a transaction object that can be used to execute multiple SQL statements, queries, commit or rollback.
+Following there are methods exposed by the transaction object:</p>
+<p><WrappedSection></p>
+<pre><code>Commit() CommittedSQLTx, error
+Rollback() error
+SQLExec(sql, params) error
+SQLQuery(sql, params) SQLQueryResult, error
+</code></pre>
+<p></WrappedSection></p>
+<p>It's possible to rollback a transaction by calling the <code>Rollback()</code> method. In this case, the transaction object is no longer valid and should not be used anymore.
+To commit a transaction, you must call the <code>Commit()</code> method.</p>
+<blockquote>
+<p><strong>Note</strong>: At the moment immudb support only 1 read-write transaction at a time, so it's up the application to ensure that only one read-write transaction is open at a time, or to handle read conflict error. In such case the error code returned by sdk will be <code>25P02</code> <strong>CodInFailedSqlTransaction</strong>.</p>
+</blockquote>
+<p>:::: tabs</p>
+<p>::: tab Go</p>
+<pre><code class="language-go">  cli := immudb.NewClient()
+
+  err := cli.OpenSession(context.TODO(), []byte(`immudb`), []byte(`immudb`), &quot;defaultdb&quot;)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  tx1, err := cli.NewTx(context.TODO())
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  err = tx1.SQLExec(context.TODO(), `CREATE TABLE table1(id INTEGER,PRIMARY KEY id);`, nil)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  rand.Seed(time.Now().UnixNano())
+  err = tx1.SQLExec(context.TODO(), fmt.Sprintf(&quot;INSERT INTO table1(id) VALUES (%d)&quot;, rand.Int()), nil)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  txh, err := tx1.Commit(context.TODO())
+  if err != nil {
+    log.Fatal(err)
+  }
+  fmt.Printf(&quot;Successfully committed rows %d\n&quot;, txh.UpdatedRows)
+
+  err = cli.CloseSession(context.TODO())
+  if err != nil {
+    log.Fatal(err)
+  }
+</code></pre>
+<p>:::</p>
+<p>::: tab Java
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4j/issues/new">Java sdk github project</a>
+:::</p>
+<p>::: tab Python</p>
+<p>Currently immudb Python sdk doesn't support interactive transactions. </p>
+<p>However you can still use non-interactive SQL Transactions.</p>
+<pre><code class="language-python">from immudb import ImmudbClient
+from uuid import uuid4
+
+URL = &quot;localhost:3322&quot;  # ImmuDB running on your machine
+LOGIN = &quot;immudb&quot;        # Default username
+PASSWORD = &quot;immudb&quot;     # Default password
+DB = b&quot;defaultdb&quot;       # Default database name (must be in bytes)
+
+def main():
+    client = ImmudbClient(URL)
+    client.login(LOGIN, PASSWORD, database = DB)
+
+    client.sqlExec(&quot;&quot;&quot;
+        CREATE TABLE IF NOT EXISTS example (
+            uniqueID VARCHAR[64], 
+            value VARCHAR[32],
+            created TIMESTAMP,
+            PRIMARY KEY(uniqueID)
+        );&quot;&quot;&quot;)
+
+    client.sqlExec(&quot;&quot;&quot;
+        CREATE TABLE IF NOT EXISTS related (
+            id INTEGER AUTO_INCREMENT, 
+            uniqueID VARCHAR[64], 
+            relatedValue VARCHAR[32],
+            PRIMARY KEY(id)
+        );&quot;&quot;&quot;)
+
+    uid1 = str(uuid4())
+    uid2 = str(uuid4())
+    params = {
+        &quot;uid1&quot;: uid1,
+        &quot;uid2&quot;: uid2
+    }
+
+    resp = client.sqlExec(&quot;&quot;&quot;
+        BEGIN TRANSACTION;
+
+        INSERT INTO example (uniqueID, value, created) 
+            VALUES (@uid1, 'test1', NOW()), (@uid2, 'test2', NOW());
+        INSERT INTO related (uniqueID, relatedValue) 
+            VALUES (@uid1, 'related1'), (@uid2, 'related2');
+        INSERT INTO related (uniqueID, relatedValue) 
+            VALUES (@uid1, 'related3'), (@uid2, 'related4');
+
+        COMMIT;
+    &quot;&quot;&quot;, params)
+
+    transactionId = resp.txs[0].header.id
+
+    result = client.sqlQuery(&quot;&quot;&quot;
+        SELECT 
+            related.id,
+            related.uniqueID, 
+            example.value, 
+            related.relatedValue, 
+            example.created
+        FROM related 
+        JOIN example 
+            ON example.uniqueID = related.uniqueID;
+    &quot;&quot;&quot;)
+    for item in result:
+        id, uid, value, relatedValue, created = item
+        print(&quot;ITEM&quot;, id, uid, value, relatedValue, created.isoformat())
+
+
+    result = client.sqlQuery(f&quot;&quot;&quot;
+        SELECT 
+            related.id,
+            related.uniqueID, 
+            example.value, 
+            related.relatedValue, 
+            example.created
+        FROM related BEFORE TX {transactionId} 
+        JOIN example BEFORE TX {transactionId} 
+            ON example.uniqueID = related.uniqueID;
+    &quot;&quot;&quot;)
+    print(result) # You can't see just added entries,
+                  # my fellow time traveller
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>:::</p>
+<p>::: tab Node.js
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb-node/issues/new">Node.js sdk github project</a>
+:::</p>
+<p>::: tab .Net
+This feature is not yet supported or not documented.
+Do you want to make a feature request or help out? Open an issue on <a href="https://github.com/codenotary/immudb4dotnet/issues/new">.Net sdk github project</a>
+:::</p>
+<p>::: tab Others
+If you're using another development language, please refer to the <a href="../../immugw/">immugw</a> option.
+:::</p>
+<p>::::</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../../..';</script>
+    <script src="../../../js/theme_extra.js" defer></script>
+    <script src="../../../js/theme.js" defer></script>
+      <script src="../../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

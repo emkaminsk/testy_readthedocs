@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/operations/backwards-compatibility/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Backwards compatibility - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Backwards compatibility";
+        var mkdocs_page_input_path = "operations/backwards-compatibility.md";
+        var mkdocs_page_url = "/codenotary/immudb/operations/backwards-compatibility/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Backwards compatibility</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="backwards-compatibility">Backwards compatibility</h1>
+<p><WrappedSection></p>
+<h3 id="immudb-11-proof-compatibility">immudb 1.1 proof compatibility</h3>
+<p>immudb 1.2 introduced KV metadata to support new features such as logical deletion or data expiration.
+This change required updates to the way a transaction hash is calculated.
+The downside of such change is that immudb clients using immudb 1.2+
+needed an updated method of proof calculation in order to verify newly added data.</p>
+<p>In some cases it is very hard or impossible to update the verification code on the client side.
+If this is the case, immudb offers a way to disable metadata to maintain compatibility with older clients.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h4 id="enabling-the-11-proof-compatibility-mode">Enabling the 1.1 proof compatibility mode</h4>
+<p><em>Note: backwards compatibility mode is currently not available for the <code>detaultdb</code> database.</em></p>
+<p>When creating new database, the mode can be specified with:</p>
+<pre><code class="language-bash">$ ./immuadmin database create &lt;db-name&gt; --write-tx-header-version 0
+</code></pre>
+<p>Enabling compatibility mode for existing databases can be done by:</p>
+<pre><code class="language-bash">$ ./immuadmin database update &lt;db-name&gt; --write-tx-header-version 0
+</code></pre>
+<p><em>Note: immudb restart is needed to make this change effective.</em></p>
+<p>In order to re-enable metadata-enhanced proofs,
+update database settings with <code>--write-tx-header-version 1</code> option.</p>
+<p></WrappedSection></p>
+<p><WrappedSection></p>
+<h4 id="limitations-of-11-compatibility-mode">Limitations of 1.1 compatibility mode</h4>
+<p>Switching to 1.1-compatible proof mode will disable metadata support and thus will make the following operations unavailable:</p>
+<ul>
+<li>For KV interface:</li>
+<li>Logical deletion</li>
+<li>Data expiration</li>
+<li>Non-indexable entries</li>
+<li>For SQL interface:</li>
+<li>Logical deletion</li>
+<li>Updates to indexed columns</li>
+</ul>
+<p>Make sure to test your application before enabling the 1.1 compatibility mode.</p>
+<h4 id="working-with-database-that-already-contains-metadata-enhanced-entries">Working with database that already contains metadata-enhanced entries</h4>
+<p>Even though old clients can not validate proofs for metadata-enhanced records,
+those can still read the data without proofs as long as those don't use metadata.
+Operations such as <code>Get</code>, <code>Scan</code> or <code>History</code> will not cause errors in such workloads.</p>
+<p>If proofs are needed, KV entries that were previously added with metadata should
+be re-added to the database after enabling immudb 1.1 compatibility mode.</p>
+<p></WrappedSection></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

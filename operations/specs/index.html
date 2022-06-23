@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/codenotary/immudb/operations/specs/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>immudb specs - Immudb documentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "immudb specs";
+        var mkdocs_page_input_path = "operations/specs.md";
+        var mkdocs_page_url = "/codenotary/immudb/operations/specs/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> Immudb documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../about/">About Immudb</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../concepts/">Concepts</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../releasenotes/">Release notes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/build/">Build</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/clitools/">CLI Tools</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/jumpstart/">Jumpstart</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/quickstart/">Quick Start</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getstarted/webconsole/">Web console</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Immudb documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>immudb specs</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="immudb-specs">immudb specs</h1>
+<p><WrappedSection></p>
+<p>immudb is an append-only, tamperproof database with key/value and SQL (Structured Query Language) application programming interfaces.</p>
+<p>The immudb core persistence layer consists of a cryptographically-immutable log. Transactions are sequentially stored and uniquely identified by unsigned 64-bit integer values, thus setting a theoretical limit of 18446744073709551615 transactions (1^64 - 1).</p>
+<p>In order to provide manageable limits, immudb is designed to set an upper bound to the number of key-value pairs included in a single transaction. The default value being 1024, so using default settings, the theoretical number of key-value pairs that can be stored in immudb is: 1024 * (1^64 - 1).</p>
+<p>We designed immudb to require stable resources but not imposing strong limitations as most of the settings can be adjusted based on the use-case requirements.</p>
+<p>While key-value pairs consist of arbitrary byte arrays, a maximum length may be set at database creation time. Both parameters can be increased as needed, considering:</p>
+<ul>
+<li>long keys may degrade performance (when querying data through the index)</li>
+<li>longer values requires more memory at runtime</li>
+</ul>
+<p>Note: The cryptographic linking does not impose a practical restriction.</p>
+<p>immudb relies on a file abstraction layer and does not directly interact with the underlying file-system, if any. But default storage layer implementation writes data into fixed-size files, default size being 512MB. The current theoretical maximum number of files is 100 millions.</p>
+<h3 id="summary">Summary</h3>
+<p>Theoretical limits may be determined by a couple of elements:</p>
+<ul>
+<li>max number transactions: 2^64-1 (uint64)</li>
+<li>max number of files: 2^63-1 (max file size 2^56-1)</li>
+<li>max value length: 32 MB (max size: 2^56-1 bytes)</li>
+<li>max key length: 1024 Bytes (max length: 2^31-1 bytes)</li>
+</ul>
+<h3 id="running-platforms">Running platforms</h3>
+<p>immudb server runs in most operating systems: BSD, Linux, OS X, Solaris, Windows, IBM z/OS</p>
+<h3 id="keyvalue-api">Key/Value API</h3>
+<p>immudb includes a basic yet complete set of operations you would expect from a key-value store:</p>
+<pre><code class="language-java">Set (SetRequest) returns (TxMetadata)
+Get (KeyRequest) returns (Entry)
+SetReference (ReferenceRequest) returns (TxMetadata)
+
+Scan(ScanRequest) returns (Entries)
+History(HistoryRequest) returns (Entries)
+
+// grouping and sorting keys based on assgined scores
+ZAdd (ZAddRequest) returns (TxMetadata)
+ZScan (ZScanRequest) returns (ZEntries)
+</code></pre>
+<p>Additionally, immudb exposes direct access to transactions based on its unique identifier:</p>
+<pre><code class="language-java">TxById(TxRequest) returns (Tx)
+TxScan(TxScanRequest) returns (TxList)
+</code></pre>
+<p>But more importantly, immudb is able to generate cryptographic-proofs whenever is needed:</p>
+<pre><code class="language-java">VerifiableSet (VerifiableSetRequest) returns (VerifiableTx)
+VerifiableGet (VerifiableGetRequest) returns (VerifiableEntry)
+
+VerifiableTxById(VerifiableTxRequest) returns (VerifiableTx)
+
+VerifiableSetReference (VerifiableReferenceRequest) returns (VerifiableTx)
+
+VerifiableZAdd (VerifiableZAddRequest) returns (VerifiableTx)
+</code></pre>
+<p>Check official SDKs documentation at <a href="../../develop/connection/">develop with immudb</a>.</p>
+<h3 id="sql-api">SQL API</h3>
+<p>Based on the key-value storage layer, immudb includes a simplified SQL engine which is able to interprete most common features you
+would expect from a relational database but with the possibility to verify rows has not been tampered with.</p>
+<pre><code class="language-java">SQLExec(SQLExecRequest) returns (SQLExecResult)
+SQLQuery(SQLQueryRequest) returns (SQLQueryResult)
+​
+VerifiableSQLGet (VerifiableSQLGetRequest) returns (VerifiableSQLEntry)
+</code></pre>
+<p>Check <a href="../../develop/sql/transactions/">SQL reference</a> for a comprehensive description of SQL statements.</p>
+<h3 id="s3-storage-backend">S3 Storage Backend</h3>
+<p>immudb can store its data in the Amazon S3 service (or a compatible alternative). The following example shows how to run immudb with the S3 storage enabled:</p>
+<pre><code class="language-bash">export IMMUDB_S3_STORAGE=true
+export IMMUDB_S3_ACCESS_KEY_ID=&lt;S3 ACCESS KEY ID&gt;
+export IMMUDB_S3_SECRET_KEY=&lt;SECRET KEY&gt;
+export IMMUDB_S3_BUCKET_NAME=&lt;BUCKET NAME&gt;
+export IMMUDB_S3_LOCATION=&lt;AWS S3 REGION&gt;
+export IMMUDB_S3_PATH_PREFIX=testing-001
+export IMMUDB_S3_ENDPOINT=&quot;https://${IMMUDB_S3_BUCKET_NAME}.s3.amazonaws.com&quot;
+
+./immudb
+</code></pre>
+<p></WrappedSection></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
