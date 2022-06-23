@@ -12,7 +12,6 @@ Welcome to Immudb's documentation!
 
    about.md  
    concepts.md    
-   index.md  
    README.md  
    releasenotes.md  
    develop/additional.md  
@@ -40,29 +39,6 @@ Welcome to Immudb's documentation!
    develop/sql/tablesalter.md 
    develop/sql/tablescreate.md
    develop/sql/transactions.md
-
-docs/getstarted:
-build.md  
-clitools.md  
-jumpstart.md  
-quickstart.md  
-webconsole.md
-
-docs/operations:
-auditor.md   
-backup.md        
-backwards-compatibility.md  
-monitoring.md
-planning.md  
-replication.md  
-service.md         
-specs.md
-
-docs/reference:
-commands.md  
-configuration.md  
-sdk.md
-
 
 Indices and tables
 ==================
